@@ -21,10 +21,11 @@
             messagingSenderId: "310980051016",
             appId: "1:310980051016:web:38083c1005b783054b587d"
         };
-
         // Firebaseを初期化
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database(); // Realtime Databaseのインスタンスを取得
+        // Realtime Databaseのインスタンスを取得
+        // **変更点:** constを削除し、databaseをグローバル変数として定義
+        database = firebase.database(); 
     </script>
 </head>
 <body>
