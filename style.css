@@ -1,572 +1,459 @@
-/* 基本設定 */
 :root {
-    --paypay-blue: #007bff;
-    --paypay-red: #ff3366;
-    --paypay-dark-blue: #1a2a4b;
-    --paypay-green: #28a745;
-    --light-bg: #eef2f7;
-    --card-bg: #ffffff;
-    --border-light: #f0f0f0;
-    --text-primary: #333;
-    --text-secondary: #666;
-    --shadow-light: rgba(0, 0, 0, 0.05);
-    --shadow-medium: rgba(0, 0, 0, 0.1);
+    --primary-color: #008CFF; /* PayPay Blue */
+    --secondary-color: #FF5A5F; /* Accent red */
+    --text-color: #333;
+    --light-gray: #f4f7f6;
+    --border-color: #ddd;
+    --success-color: #28a745;
+    --pending-color: #ffc107;
+    --error-color: #dc3545;
+    --card-bg: #fff;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --border-radius: 12px;
 }
 
 body {
-    font-family: 'Noto Sans JP', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Noto Sans JP', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    line-height: 1.6;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 上部に寄せる */
     min-height: 100vh;
-    background-color: var(--light-bg);
-    margin: 0;
-    color: var(--text-primary);
-    line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
 }
 
-/* コンテナ全般 */
 .container {
+    max-width: 420px; /* スマートフォンでの表示を想定 */
+    width: 100%;
     background-color: var(--card-bg);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 30px var(--shadow-medium);
-    text-align: center;
-    width: 90%;
-    max-width: 420px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 25px;
     box-sizing: border-box;
+    margin-bottom: 20px; /* フッターや余白確保 */
+}
+
+.app-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 20px; /* セクション間のスペース */
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.app-title {
+    color: var(--primary-color);
+    font-size: 1.8em;
+    margin: 0;
+    font-weight: 700;
+}
+
+.shop-name {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 1.3em;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.section-title-small {
+    font-size: 1.1em;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.section-description {
+    text-align: center;
+    color: #555;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    color: var(--text-color);
+    background-color: #fcfcfc;
+    -moz-appearance: textfield; /* Firefoxでinput type="number"の上下矢印を非表示にする */
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+button {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover {
+    background-color: #007ACC;
+    transform: translateY(-1px);
+}
+
+.primary-btn:active {
+    background-color: #006BB3;
+    transform: translateY(0);
+}
+
+.secondary-btn {
+    background-color: #e0e0e0;
+    color: var(--text-color);
+    border: 1px solid #ccc;
+}
+
+.secondary-btn:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-1px);
+}
+
+.secondary-btn:active {
+    background-color: #c0c0c0;
+    transform: translateY(0);
+}
+
+button:disabled {
+    background-color: #cccccc;
+    color: #999999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.action-btn {
+    margin-top: 20px;
+}
+
+.qr-code-display {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.qr-image-canvas {
+    padding: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    display: inline-block; /* Canvas自身が中央に寄るように */
+}
+
+.qr-image-canvas canvas {
+    display: block; /* 余分なスペースをなくす */
+}
+
+.qr-info {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 15px;
+}
+
+.url-text {
+    word-break: break-all; /* 長いURLを改行 */
+    font-size: 0.8em;
+    color: #888;
+}
+
+.small-text {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 5px;
+}
+
+.payment-status-section {
+    text-align: center;
+}
+
+.status-pending {
+    color: var(--pending-color);
+    font-size: 1.1em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.status-completed {
+    color: var(--success-color);
+    font-size: 1.1em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.status-error {
+    color: var(--error-color);
+    font-size: 1.1em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+#receivedPaymentInfo {
+    font-size: 1.0em;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-top: 10px;
 }
 
 .hidden {
     display: none !important;
 }
 
-/* カードスタイル */
-.card {
-    background-color: var(--card-bg);
-    padding: 20px 25px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px var(--shadow-light);
-    border: 1px solid var(--border-light);
-}
-
-/* タイトルとセクションタイトル */
-.app-title {
-    color: var(--paypay-dark-blue);
-    margin: 0;
-    font-size: 1.9em;
-    font-weight: 700;
-}
-.shop-name {
-    font-size: 1.1em;
-    color: var(--text-secondary);
-    margin-top: 5px;
-}
-
-.section-title {
-    color: var(--paypay-dark-blue);
-    margin-bottom: 20px;
-    font-size: 1.5em;
-    font-weight: 600;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-light);
-}
-.section-title-small {
-    font-size: 1.2em;
-    color: var(--paypay-dark-blue);
-    margin-bottom: 10px;
-}
-.section-description {
-    font-size: 1.1em;
-    color: var(--text-secondary);
-    margin-bottom: 25px;
-}
-
-/* ボタンの共通スタイル */
-button {
-    border: none;
-    padding: 14px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.primary-btn { /* 生成、メインに戻る, チャージ実行 */
-    background-color: var(--paypay-blue);
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-}
-.primary-btn:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-}
-
-.secondary-btn { /* リセット */
-    background-color: #6c757d;
-    color: white;
-    padding: 10px 18px; 
-    font-size: 0.95em;
-    box-shadow: none;
-}
-.secondary-btn:hover {
-    background-color: #5a6268;
-    transform: translateY(-1px);
-}
-
-
-.action-btn { /* チャージ、支払い、QR支払い */
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn .icon {
-    font-size: 1.2em;
-    margin-right: 8px;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.95;
-}
-
-.pay-btn { /* 支払い */
-    background-color: var(--paypay-red);
-    box-shadow: 0 4px 10px rgba(255, 51, 102, 0.2);
-}
-
-.toggle-btn { /* 戻るボタン */
-    background-color: var(--paypay-green);
-    color: white;
-    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.toggle-btn:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-}
-
-.large-btn { /* QR読み取りボタンなど、大きく表示したい場合 */
-    padding: 18px 25px;
-    font-size: 1.2em;
-    margin-top: 20px; /* メイン画面のボタン間隔 */
-}
-
-/* チャージボタンのスタイル */
-.charge-toggle-btn {
-    background-color: #6a5acd; /* 紫系 */
-    box-shadow: 0 4px 10px rgba(106, 90, 205, 0.2);
-    margin-top: 15px; /* QRボタンとの間隔 */
-}
-.charge-toggle-btn:hover {
-    background-color: #584baa;
-}
-
-
-/* ヘッダー */
-.header {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-light);
-}
-
-/* 残高表示セクション */
+/* 顧客アプリ用スタイル */
 .balance-section {
-    background-color: #e6f7ff;
-    border: 1px solid #b3e0ff;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 .balance-label {
-    margin: 5px 0;
-    font-size: 1.1em;
-    color: var(--text-secondary);
-}
-
-.balance {
-    font-size: 3.2em;
-    font-weight: 800;
-    color: var(--paypay-blue);
-    letter-spacing: -0.03em;
-    margin: 0;
-}
-
-/* アクションセクション (入力とボタン) */
-.action-section {
-    padding: 25px;
-}
-
-.input-group {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-.input-group label {
-    font-size: 0.95em;
-    color: var(--text-secondary);
+    font-size: 1em;
+    color: #555;
     margin-bottom: 5px;
 }
 
-input[type="number"], input[type="text"] {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid #dde3e9;
-    border-radius: 8px;
-    font-size: 1.1em;
-    text-align: right;
-    appearance: none;
-    -moz-appearance: textfield;
-    box-sizing: border-box;
-}
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
+.balance {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--primary-color);
     margin: 0;
 }
-input[type="text"] {
-    text-align: left;
+
+.qr-toggle-btn, .charge-toggle-btn {
+    margin-bottom: 10px;
 }
 
-.buttons {
-    display: flex;
-    justify-content: space-around;
-    gap: 15px;
-}
-
-/* 顧客アプリ: QRコード読み取り画面 */
-.qr-reader-section {
-    padding: 25px;
-}
-.qr-camera-area { /* カメラ映像表示エリアのコンテナ */
+.qr-camera-feed {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 1; /* 正方形にする */
+    /* カメラの縦横比に応じて調整、例えば4:3の場合 */
+    padding-top: 75%; /* height / width * 100% = 3/4 * 100% */
+    background-color: #000;
+    border-radius: var(--border-radius);
     overflow: hidden;
-    margin: 0 auto 25px auto;
-    background-color: #000; /* カメラが起動していない時の背景色 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.9em;
+    margin-bottom: 15px;
 }
-.qr-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 映像をエリアに合わせて拡大・縮小 */
-    display: block; /* 余白をなくす */
-}
-.qr-camera-area canvas { /* QRコード解析用の一時的なキャンバス */
-    display: none; /* 通常は非表示 */
-}
-.camera-status {
-    position: absolute;
-    color: white;
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 10px 15px;
-    border-radius: 5px;
-    z-index: 10;
-}
-.scan-line { /* スキャンアニメーション */
+
+.camera-preview {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 2px;
-    background: linear-gradient(to right, transparent, #4CAF50, transparent);
-    animation: scan 2s infinite linear;
-    z-index: 5;
-}
-@keyframes scan {
-    0% { top: 0; }
-    50% { top: 100%; }
-    100% { top: 0; }
+    height: 100%;
+    object-fit: cover; /* カメラ映像をコンテナにフィットさせる */
+    border-radius: var(--border-radius);
+    transform: scaleX(-1); /* フロントカメラの場合のミラーリング */
 }
 
+#qrCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 10; /* カメラ映像の上に描画 */
+    opacity: 0.5; /* QRコードの描画が見えるように透明度を調整 */
+}
 
-.qr-instruction {
-    font-size: 0.95em;
-    color: var(--text-secondary);
+.status-message {
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 10px;
+    min-height: 1.2em; /* レイアウトのずれを防ぐため */
+}
+
+.scanned-amount-display {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 500;
+    color: var(--text-color);
     margin-top: 15px;
+    margin-bottom: 20px;
 }
 
-.read-amount-display {
-    font-size: 1.4em;
-    font-weight: bold;
-    color: var(--paypay-dark-blue);
-    margin-bottom: 20px;
-    padding: 10px 0;
-    border-top: 1px dashed var(--border-light);
-    border-bottom: 1px dashed var(--border-light);
-}
-.read-amount-display span {
-    color: var(--paypay-red);
+#scannedAmount {
+    color: var(--secondary-color);
+    font-weight: 700;
     font-size: 1.2em;
 }
 
-/* チャージセクション */
-.charge-section {
-    padding: 25px;
-}
-
-/* ★追加スタイル★ */
-.predicted-balance-display {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: var(--text-primary);
-    margin-top: 15px;
-    margin-bottom: 25px;
-    padding: 10px 0;
-    border-top: 1px dashed var(--border-light);
-    border-bottom: 1px dashed var(--border-light);
-}
-.predicted-balance-display span {
-    font-size: 1.3em;
-    color: #6a5acd; /* チャージの色に合わせる */
-}
-/* ★ここまで追加スタイル★ */
-
-
-/* 店舗アプリ: QRコード表示セクション */
-.qr-display-section {
-    padding: 25px;
-}
-.qr-code-display div { /* QRコードのCanvas要素 */
-    width: 200px;
-    height: 200px;
-    border: 1px solid #f0f0f0;
-    display: block;
-    margin: 0 auto 15px auto;
-    border-radius: 8px;
-    image-rendering: pixelated; /* QRコードがぼやけないように */
-}
-.qr-info {
-    font-size: 0.95em;
-    color: var(--text-secondary);
-    font-weight: 500;
-    line-height: 1.4;
-}
-.url-text { /* `qrUrlText` と `small-text` に適用 */
-    font-size: 0.85em;
+.predicted-balance {
+    text-align: center;
+    font-size: 1.0em;
     color: #555;
-    background-color: #f0f8ff;
-    padding: 8px 12px;
-    border-radius: 5px;
-    margin-top: 10px;
-    word-break: break-all;
-    white-space: pre-wrap;
-    text-align: left;
-}
-.small-text {
-    font-size: 0.8em;
-    color: #888;
+    margin-top: 15px;
 }
 
-.payment-status-section {
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px dashed var(--border-light);
-}
-.payment-status-section p {
-    font-size: 1.3em;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-.status-pending {
-    color: #ff9800; /* オレンジ */
-}
-.status-success {
-    color: var(--paypay-green); /* 緑 */
-}
-.status-failed {
-    color: var(--paypay-red); /* 赤 */
-}
-.payment-status-section .icon { /* ステータスアイコン */
-    font-size: 1em;
-    margin-right: 8px;
+#predictedBalanceDisplay {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1em;
 }
 
-
-/* 決済完了画面 */
-.payment-completion-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
-    min-height: 250px;
-}
-
+/* 完了画面 */
 .completion-card {
-    padding: 30px;
-    background-color: #e6ffe6;
-    border: 1px solid #b3ffb3;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
+    text-align: center;
+    background-color: var(--card-bg);
+    padding: 30px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 .completion-icon {
-    font-size: 3.5em;
-    color: var(--paypay-green);
-    animation: bounceIn 0.8s ease-out;
+    font-size: 4em;
+    color: var(--success-color);
+    margin-bottom: 15px;
 }
 
 .completion-message {
-    font-size: 1.6em;
-    font-weight: bold;
-    color: var(--paypay-dark-blue);
-    margin: 0;
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
 }
 
 .completed-amount {
-    font-size: 2.5em;
-    font-weight: 800;
-    color: var(--paypay-red);
-    margin: 0;
-    letter-spacing: -0.02em;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin-bottom: 15px;
 }
 
 .thanks-message {
     font-size: 1em;
-    color: var(--text-secondary);
-    margin: 0;
+    color: #666;
+    margin-bottom: 20px;
 }
+
 .shop-id-display {
-    font-size: 0.9em;
-    color: var(--text-secondary);
-    margin: 0;
+    font-size: 0.85em;
+    color: #888;
+    margin-top: 10px;
 }
 
-/* チャージ完了画面 */
-.charge-completion-section .completion-icon {
-    color: #6a5acd; /* 紫系 */
-}
-.charge-completion-section .completed-amount {
-    color: #6a5acd; /* 紫系 */
-}
-.charge-completion-section .completion-card {
-    background-color: #f0e6ff;
-    border: 1px solid #d8baff;
-}
-
-
-/* アニメーション */
-@keyframes bounceIn {
-    0% {
-        transform: scale(0.3);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-    70% {
-        transform: scale(0.9);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* 取引履歴セクション */
-.history-section {
-    padding: 25px;
-    max-height: 300px;
-    overflow-y: auto;
-    text-align: left;
-}
-
-#transactionHistory, #shopTransactionHistory {
+/* 履歴セクション */
+.history-section ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 200px; /* スクロール可能にする */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #fdfdfd;
 }
 
-/* カスタムスクロールバー (Webkit) */
-#transactionHistory::-webkit-scrollbar, #shopTransactionHistory::-webkit-scrollbar {
-    width: 8px;
-}
-#transactionHistory::-webkit-scrollbar-track, #shopTransactionHistory::-webkit-scrollbar-track {
-    background: var(--light-bg);
-    border-radius: 10px;
-}
-#transactionHistory::-webkit-scrollbar-thumb, #shopTransactionHistory::-webkit-scrollbar-thumb {
-    background: #c0c0c0;
-    border-radius: 10px;
-}
-#transactionHistory::-webkit-scrollbar-thumb:hover, #shopTransactionHistory::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-#transactionHistory li, #shopTransactionHistory li {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
+.history-section li {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.95em;
-    transition: background-color 0.2s ease;
+    font-size: 0.9em;
 }
 
-#transactionHistory li:last-child, #shopTransactionHistory li:last-child {
+.history-section li:last-child {
     border-bottom: none;
 }
 
-#transactionHistory li:hover, #shopTransactionHistory li:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+.history-section li.charge {
+    color: var(--success-color);
 }
 
-/* 履歴のアイコンと色 */
-#transactionHistory li.charge, #shopTransactionHistory li.charge {
-    color: var(--paypay-green);
-    font-weight: 600;
-}
-#transactionHistory li.charge span:first-child::before, #shopTransactionHistory li.charge span:first-child::before {
-    content: "💰 ";
-    margin-right: 5px;
-}
-/* チャージは紫系で表示 */
-#transactionHistory li.charge {
-    color: #6a5acd;
-}
-#transactionHistory li.charge span:first-child::before {
-    content: "💰 "; /* チャージは通貨アイコン */
-    margin-right: 5px;
+.history-section li.payment {
+    color: var(--error-color);
 }
 
-
-#transactionHistory li.payment {
-    color: var(--paypay-red);
-    font-weight: 600;
-}
-#transactionHistory li.payment span:first-child::before {
-    content: "💳 ";
-    margin-right: 5px;
+.history-section li span:first-child {
+    flex-basis: 40%;
 }
 
-.history-date {
+.history-section li span:nth-child(2) {
+    flex-basis: 30%;
+    text-align: right;
+}
+
+.history-section li span:last-child {
+    flex-basis: 30%;
+    text-align: right;
     font-size: 0.8em;
-    color: var(--text-secondary);
-    font-weight: normal;
+    color: #999;
+}
+
+.history-section li.charge span:nth-child(2) {
+    font-weight: bold;
+}
+.history-section li.payment span:nth-child(2) {
+    font-weight: bold;
 }
