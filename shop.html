@@ -8,22 +8,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script type="text/javascript" src="qrcode.min.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
     <script>
-        // Firebaseコンソールで取得した設定情報を貼り付け済み
+        // あなたのFirebaseプロジェクトの設定情報
         const firebaseConfig = {
-          apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10", 
-          authDomain: "my-paypay-sim-45735.firebaseapp.com",
-          projectId: "my-paypay-sim-45735",
-          storageBucket: "my-paypay-sim-45735.firebasestorage.app",
-          messagingSenderId: "310980051016",
-          appId: "1:310980051016:web:38083c1005b783054b587d"
+            apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10",
+            authDomain: "my-paypay-sim-45735.firebaseapp.com",
+            databaseURL: "https://my-paypay-sim-45735-default-rtdb.asia-southeast1.firebasedatabase.app", // プロジェクトIDから推測されるURL
+            projectId: "my-paypay-sim-45735",
+            storageBucket: "my-paypay-sim-45735.firebasestorage.app",
+            messagingSenderId: "310980051016",
+            appId: "1:310980051016:web:38083c1005b783054b587d"
         };
-
         // Firebaseを初期化
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database(); // Realtime Databaseのインスタンスを取得
+        // Realtime Databaseのインスタンスを取得
+        const database = firebase.database();
     </script>
 </head>
 <body>
@@ -33,7 +35,7 @@
             <p class="shop-name">模擬PayPayレジ</p>
         </div>
 
-        <div class="action-section card" id="mainShopSection">
+        <div class="action-section card">
             <h2 class="section-title">支払い金額設定</h2>
             <div class="input-group">
                 <label for="paymentAmount">金額:</label>
@@ -47,10 +49,11 @@
         <div class="qr-display-section card hidden" id="qrDisplaySection">
             <h2 class="section-title-small">顧客提示用QRコード</h2>
             <div class="qr-code-display">
-                <div id="qrCodeCanvas" class="qr-image-canvas" aria-label="支払い金額未設定のQRコード表示エリア"></div>
+                <div id="qrCodeCanvas" class="qr-image-canvas" aria-label="QRコード表示エリア"></div> 
                 <p class="qr-info">
-                    顧客アプリでこのQRコードを読み取ってください。
+                    顧客にこのQRコードをカメラで読み取ってもらってください。
                 </p>
+                <p class="small-text url-text" id="qrUrlText"></p>
                 <p class="small-text">
                     (金額と店舗IDが含まれています)
                 </p>
@@ -58,29 +61,22 @@
             <button id="resetAppBtn" class="secondary-btn">
                 <span class="icon">🔄</span> リセット
             </button>
-             <p class="payment-status-message" id="paymentStatusMessage" style="margin-top:15px; font-weight: bold; color: #007bff;">
-                ⏳ 顧客からの支払い待ち...
-            </p>
         </div>
 
-        <div class="payment-received-section hidden" id="paymentReceivedSection">
-            <div class="completion-card card">
-                <div class="completion-icon green-bg" role="img" aria-label="入金完了">✅</div>
-                <p class="completion-message">入金が完了しました！</p>
-                <p class="received-amount" id="receivedAmount">¥ 0</p>
-                <p class="received-customer-info" id="receivedCustomerInfo"></p>
-                <p class="thanks-message">ご利用ありがとうございます。</p>
-            </div>
-            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+        <div class="payment-status-section card" id="paymentStatusSection">
+            <h2 class="section-title">支払いステータス</h2>
+            <p class="status-pending" id="paymentStatusText">
+                <span class="icon">⏳</span> 顧客からの支払い待ち...
+            </p>
+            <p id="receivedPaymentInfo" class="hidden"></p>
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">支払い完了履歴</h2>
+            <h2 class="section-title">支払い完了履歴</h2> 
             <ul id="shopTransactionHistory"></ul>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="shop_script.js"></script>
 </body>
 </html>
