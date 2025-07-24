@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // このデータを顧客側アプリが解析します
         const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
         
-        // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを生成する
+        // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを作成する
         if (qrCodeCanvas) {
             const oldCanvas = qrCodeCanvas;
             const newCanvas = document.createElement('canvas');
@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (qrCodeCanvas) {
+            qrCodeCanvas.textContent = "";
             qrCode = new QRCode("qrCodeCanvas", { 
                 text: qrData,
                 width: 200,
