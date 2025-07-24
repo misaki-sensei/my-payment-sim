@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     qrContext.drawImage(qrCameraVideo, 0, 0, qrCanvas.width, qrCanvas.height);
                     const imageData = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-                    const code = jsqr(imageData.data, imageData.width, imageData.height, {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
                         inversionAttempts: "dontInvert", // QRコードの読み取り精度調整
                     });
 
