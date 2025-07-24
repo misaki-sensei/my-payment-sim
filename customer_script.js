@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let ctx = qrCanvas.getContext('2d');
             ctx.drawImage(qrCameraVideo, 0, 0, qrCanvas.width, qrCanvas.height);
             let imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-            let code = jsQR(imageData.data, imageData.width, imageData.height, {
+            let code = jsqr(imageData.data, imageData.width, imageData.height, {
                 inversionAttempts: "dontInvert",
             });
 
