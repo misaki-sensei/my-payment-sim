@@ -1,25 +1,28 @@
-// shop_script.js (Firebase連携版)
+// shop_script.js (Firebase連携版 - 更新済み)
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM要素の取得 ---
-    const mainShopSection = document.getElementById('mainShopSection');
+    const mainShopSection = document.getElementById('mainShopSection'); // 新しいDOMの親要素
     const paymentAmountInput = document.getElementById('paymentAmount');
     const generateQrBtn = document.getElementById('generateQrBtn');
     const qrDisplaySection = document.getElementById('qrDisplaySection');
     let qrCodeCanvas = document.getElementById('qrCodeCanvas'); 
+    const qrUrlText = document.getElementById('qrUrlText'); // 追加された要素
+    const paymentStatusText = document.getElementById('paymentStatusText'); // ID変更
+    const receivedPaymentInfoEl = document.getElementById('receivedPaymentInfo'); // ID変更
     const resetAppBtn = document.getElementById('resetAppBtn');
     const shopTransactionHistoryEl = document.getElementById('shopTransactionHistory');
-    const paymentStatusMessageEl = document.getElementById('paymentStatusMessage');
 
     // 支払い完了時に表示する新しいセクションの要素
-    const paymentReceivedSection = document.getElementById('paymentReceivedSection');
-    const receivedAmountEl = document.getElementById('receivedAmount');
-    const receivedCustomerInfoEl = document.getElementById('receivedCustomerInfo');
+    const paymentReceivedSection = document.getElementById('paymentReceivedSection'); // 新しいセクション
+    const receivedAmountEl = document.getElementById('receivedAmount'); // 新しいセクション内の要素
+    const receivedCustomerInfoNewEl = document.getElementById('receivedCustomerInfo'); // 新しいセクション内の要素
     const backToMainFromShopCompletionBtn = document.getElementById('backToMainFromShopCompletionBtn');
+
 
     // --- 定数 ---
     const SHOP_ID = 'MOCKSHOP001';
     const LOCAL_STORAGE_SHOP_HISTORY_KEY = 'shopMockPayPayHistory'; // ローカル履歴は引き続きLocalStorage
-    const COMPLETION_DISPLAY_TIME = 3000;
+    const COMPLETION_DISPLAY_TIME = 3000; // 完了メッセージ表示時間
 
     // Firebase Realtime Databaseのパス (店舗側と顧客側で共通)
     const PAYMENT_REQUEST_DB_PATH = 'paymentRequests/'; // 店舗側がQRコードに埋め込む取引情報
@@ -88,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isNaN(amount) || amount <= 0) {
             alert('有効な金額を入力してください！');
-            showSection(mainShopSection);
+            showSection(mainShopSection); // メインセクションに戻る
             return;
         }
 
@@ -99,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // QRコードに埋め込むデータ（クエリ文字列形式）
         // このデータを顧客側アプリが解析します
-        // Firebaseに保存するPaymentRequestへの参照をQRに含める
         const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
         
         // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを生成する
@@ -110,12 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
             newCanvas.className = oldCanvas.className;
             newCanvas.setAttribute('aria-label', `支払い金額未設定のQRコード表示エリア`);
             oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-            qrCodeCanvas = newCanvas;
+            qrCodeCanvas = newCanvas; // 新しいCanvas要素を再取得
             qrCode = null;
         }
 
         if (qrCodeCanvas) {
-            qrCodeCanvas.textContent = "";
             qrCode = new QRCode("qrCodeCanvas", { 
                 text: qrData,
                 width: 200,
@@ -132,8 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        showSection(qrDisplaySection);
-        paymentStatusMessageEl.textContent = '⏳ 顧客からの支払い待ち...';
+        showSection(qrDisplaySection); // QR表示セクションを表示
+        qrUrlText.textContent = `QRデータ: ${qrData}`; // QRデータをテキストでも表示
+        paymentStatusText.innerHTML = '<span class="icon">⏳</span> 顧客からの支払い待ち...';
+        paymentStatusText.className = 'status-pending'; // ステータスを「保留中」の色に
+        receivedPaymentInfoEl.classList.add('hidden'); // 入金情報エリアを非表示
 
         // Firebase Realtime Databaseに支払いリクエスト情報を書き込む
         try {
@@ -156,18 +160,18 @@ document.addEventListener('DOMContentLoaded', () => {
         listenForPaymentStatus();
     };
 
-    const showPaymentReceivedSection = (paymentData) => {
+    const showPaymentReceivedCompletionSection = (paymentData) => {
         receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`;
-        receivedCustomerInfoEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
-        showSection(paymentReceivedSection);
+        receivedCustomerInfoNewEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
+        showSection(paymentReceivedSection); // 支払い完了セクションを表示
 
         // 一定時間後に自動でメイン画面に戻る
         setTimeout(() => {
             showSection(mainShopSection);
             paymentAmountInput.value = '0'; // 金額をリセット
-            paymentStatusMessageEl.textContent = ''; // メッセージをクリア
         }, COMPLETION_DISPLAY_TIME);
     };
+
 
     const listenForPaymentStatus = () => {
         // 以前のリスナーがあれば解除
@@ -187,7 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (statusData && statusData.status === 'success') {
                 console.log("Payment received from Firebase:", statusData);
-                paymentStatusMessageEl.textContent = '✅ 支払いを受信しました！';
+                paymentStatusText.innerHTML = `<span class="icon">✅</span> ¥ ${statusData.amount.toLocaleString()} が入金されました！`;
+                paymentStatusText.className = 'status-success'; // ステータスを「成功」の色に
+                receivedPaymentInfoEl.textContent = `取引ID: ${statusData.transactionId.substring(statusData.transactionId.length - 4)} (顧客: ${statusData.customerId || '不明'})`;
+                receivedPaymentInfoEl.classList.remove('hidden');
 
                 // 履歴に追加
                 shopTransactions.push({
@@ -200,9 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateShopHistoryDisplay();
 
                 // 入金完了画面を表示
-                showPaymentReceivedSection({
+                showPaymentReceivedCompletionSection({
                     amount: statusData.amount,
-                    customerId: statusData.customerId,
+                    customerId: statusData.comCustomerName || statusData.customerId, // 顧客名があればそれを使う、なければID
                     transactionId: statusData.transactionId
                 });
 
@@ -211,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 paymentStatusListener = null;
                 currentExpectedTransactionId = null;
 
-                // Firebaseから支払いステータスを削除（不要であれば）
+                // Firebaseから支払いステータスを削除（この取引は完了したので）
                 db.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
                     console.log("Payment status removed from Firebase after processing.");
                 }).catch(error => {
@@ -220,7 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, (error) => {
             console.error("Firebaseリスナーエラー:", error);
-            paymentStatusMessageEl.textContent = '⛔ 支払い監視中にエラーが発生しました。';
+            paymentStatusText.innerHTML = '⛔ 支払い監視中にエラーが発生しました。';
+            paymentStatusText.className = 'status-error';
         });
     };
 
@@ -233,9 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
     generateQrBtn.addEventListener('click', generateAndDisplayQrCode);
 
     resetAppBtn.addEventListener('click', async () => { // asyncを追加
-        showSection(mainShopSection);
+        showSection(mainShopSection); // メインセクションに戻る
         paymentAmountInput.value = '0';
-        paymentStatusMessageEl.textContent = ''; // メッセージをクリア
+        paymentStatusText.innerHTML = '<span class="icon">⏳</span> 顧客からの支払い待ち...';
+        paymentStatusText.className = 'status-pending';
+        receivedPaymentInfoEl.classList.add('hidden');
+        qrUrlText.textContent = ''; // QRデータテキストをクリア
 
         // 監視中のリスナーがあれば解除
         if (paymentStatusListener) {
@@ -243,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             paymentStatusListener = null;
         }
 
-        // Firebase上の現在の支払いリクエストをクリア
+        // Firebase上の現在の支払いリクエストとステータスをクリア
         if (currentExpectedTransactionId) {
             try {
                 await db.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).remove();
@@ -253,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 await db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
-                console.log("Current payment status removed from Firebase.");
+                console.log("Current payment status removed from Firebase:", error);
             } catch (error) {
                 console.error("Error removing payment status from Firebase:", error);
             }
@@ -268,7 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
             newCanvas.className = oldCanvas.className;
             newCanvas.setAttribute('aria-label', '支払い金額未設定のQRコード表示エリア');
             oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-            qrCodeCanvas = document.getElementById('qrCodeCanvas');
+            qrCodeCanvas = document.getElementById('qrCodeCanvas'); // 新しいCanvas要素を再取得
+            qrCode = null; // qrcodeインスタンスもリセット
         }
     });
 
