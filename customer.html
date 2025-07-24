@@ -6,9 +6,27 @@
     <title>顧客アプリ (模擬PayPay)</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebaseコンソールで取得した設定情報を貼り付け済み
+        const firebaseConfig = {
+          apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10", 
+          authDomain: "my-paypay-sim-45735.firebaseapp.com",
+          projectId: "my-paypay-sim-45735",
+          storageBucket: "my-paypay-sim-45735.firebasestorage.app",
+          messagingSenderId: "310980051016",
+          appId: "1:310980051016:web:38083c1005b783054b587d"
+        };
+
+        // Firebaseを初期化
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(); // Realtime Databaseのインスタンスを取得
+    </script>
 </head>
 <body>
-    
+
     <div class="container app-container" id="appContainer">
         <div class="header">
             <h1 class="app-title">顧客アプリ</h1>
@@ -21,8 +39,8 @@
 
         <div class="main-payment-section" id="mainPaymentSection">
             <p class="section-description">店舗のQRコードを読み取って決済します</p>
-            <button id="showQrReaderBtn" class="action-btn qr-toggle-btn large-btn">
-                <span class="icon">📷</span> 店舗QRコードを読み取る
+            <button id="showQrReaderBtn" class="action-btn primary-btn large-btn">
+                <span class="icon">📸</span> 店舗QRコードを読み取る
             </button>
             <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
                 <span class="icon">➕</span> チャージする
@@ -30,23 +48,23 @@
         </div>
 
         <div class="qr-reader-section hidden" id="qrReaderSection">
-            <h2 class="section-title">QRコード読取</h2>
-            <div class="qr-camera-area card">
-                <p class="camera-status" id="cameraStatus">カメラを起動しています...</p>
-                <video id="qrCameraVideo" autoplay playsinline class="qr-video hidden"></video>
-                <canvas id="qrCanvas" class="hidden"></canvas>
-                <div class="scan-line"></div>
+            <h2 class="section-title">QRコード読み取り</h2>
+            <div class="card">
                 <p class="qr-instruction">
-                    カメラに店舗のQRコードをかざしてください。
+                    店舗のQRコードをカメラにかざしてください。
                 </p>
+                <div class="qr-camera-container">
+                    <video id="qrCameraVideo" class="qr-camera-video" autoplay playsinline></video>
+                    <canvas id="qrCanvas" class="qr-canvas"></canvas>
+                </div>
+                <p class="camera-status" id="cameraStatus">カメラを起動中...</p>
+                <p class="read-amount-display hidden" id="readAmountDisplay">
+                    支払金額: <span id="scannedAmount">¥ 0</span>
+                </p>
+                <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">
+                    <span class="icon">✅</span> この金額で支払う
+                </button>
             </div>
-            
-            <p class="read-amount-display hidden" id="readAmountDisplay">
-                読み取り金額: <span id="scannedAmount">¥ 0</span>
-            </p>
-            <button id="confirmPayBtn" class="action-btn pay-btn hidden">
-                <span class="icon">✅</span> この金額で支払う
-            </button>
             <button id="cancelQrReadBtn" class="toggle-btn back-btn">
                 <span class="icon">◀</span> キャンセル
             </button>
@@ -67,8 +85,7 @@
                 </button>
             </div>
             <button id="cancelChargeBtn" class="toggle-btn back-btn">
-                <span class="icon">◀</span> メイン画面に戻る
-            </button>
+                <span class="icon">◀</span> メイン画面に戻る</button>
         </div>
 
         <div class="payment-completion-section hidden" id="paymentCompletionSection">
@@ -93,12 +110,12 @@
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">支払い完了履歴</h2> 
+            <h2 class="section-title">支払い完了履歴</h2>
             <ul id="transactionHistory"></ul>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.1.1/dist/jsQR.min.js"></script>
+    <script src="jsqr.min.js"></script>
     <script src="customer_script.js"></script>
 </body>
 </html>
