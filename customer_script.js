@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmChargeBtn = document.getElementById('confirmChargeBtn');
     const cancelChargeBtn = document.getElementById('cancelChargeBtn');
     const predictedBalanceDisplay = document.getElementById('predictedBalanceDisplay');
-    const predictedBalanceFooter = document.getElementById('predictedBalanceFooter');
+    const predictedBalanceContainer = document.getElementById('predictedBalanceContainer'); // IDを修正しました
 
     const paymentCompletionSection = document.getElementById('paymentCompletionSection');
     const completedAmountEl = document.getElementById('completedAmount');
@@ -265,10 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const amountToCharge = parseFloat(chargeAmountInput.value);
         if (!isNaN(amountToCharge) && amountToCharge > 0) {
             predictedBalanceDisplay.textContent = `¥ ${(currentBalance + amountToCharge).toLocaleString()}`;
-            predictedBalanceFooter.classList.remove('hidden');
+            predictedBalanceContainer.classList.remove('hidden'); // 修正したIDを使用
+            confirmChargeBtn.disabled = false; // 有効な入力があればボタンを有効化
         } else {
             predictedBalanceDisplay.textContent = `¥ ${currentBalance.toLocaleString()}`; // 有効でない場合は現在の残高を表示
-            predictedBalanceFooter.classList.add('hidden');
+            predictedBalanceContainer.classList.add('hidden'); // 修正したIDを使用
+            confirmChargeBtn.disabled = true; // 無効な入力の場合はボタンを無効化
         }
     };
 
