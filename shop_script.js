@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (qrCodeCanvas) {
+            qrCodeCanvas.textContent = "";
             qrCode = new QRCode("qrCodeCanvas", { 
                 text: qrData,
                 width: 200,
