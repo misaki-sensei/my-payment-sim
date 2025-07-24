@@ -269,11 +269,11 @@ input[type="text"] {
     color: white;
     font-size: 0.9em;
 }
-.qr-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 映像をエリアに合わせて拡大・縮小 */
-    display: block; /* 余白をなくす */
+.qr-camera-video {
+   position: absolute;
+    top: 0px;
+    left: 0px;
+    visibility: hidden;
 }
 .qr-camera-area canvas { /* QRコード解析用の一時的なキャンバス */
     display: none; /* 通常は非表示 */
