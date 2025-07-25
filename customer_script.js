@@ -78,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 関数 ---
 
     const updateBalanceDisplay = () => {
-        currentBalanceEl.textContent = `¥ ${balance.toLocaleString()}`;
-        localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance.toString());
+        currentBalanceEl.textContent = `¥ ${currentBalance.toLocaleString()}`;
     };
 
     const updateHistoryDisplay = () => {
