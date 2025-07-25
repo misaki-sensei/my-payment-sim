@@ -1,37 +1,39 @@
+// customer_script.js (Firebase連携版)
 document.addEventListener('DOMContentLoaded', () => {
-    // **変更点:** デバッグログ: database変数の型と値を確認
-    console.log("CUSTOMER_SCRIPT: database variable type at DOMContentLoaded:", typeof window.database);
-    console.log("CUSTOMER_SCRIPT: database variable value at DOMContentLoaded:", window.database);
+    // --- DOM要素の取得 ---
+    const appContainer = document.getElementById('appContainer');
+    const currentBalanceEl = document.getElementById('currentBalance');
+    const transactionHistoryEl = document.getElementById('transactionHistory');
 
-    // --- DOM要素の取得 ---
-    const appContainer = document.getElementById('appContainer');
-    const currentBalanceEl = document.getElementById('currentBalance');
-    const transactionHistoryEl = document.getElementById('transactionHistory');
-    const mainPaymentSection = document.getElementById('mainPaymentSection');
-    const showQrReaderBtn = document.getElementById('showQrReaderBtn');
-    const showChargeBtn = document.getElementById('showChargeBtn');
-    const qrReaderSection = document.getElementById('qrReaderSection');
-    const qrCameraVideo = document.getElementById('qrCameraVideo'); 
-    const qrCanvas = document.getElementById('qrCanvas');       
-    const cameraStatus = document.getElementById('cameraStatus'); 
-    const scannedAmountEl = document.getElementById('scannedAmount');
-    const readAmountDisplay = document.getElementById('readAmountDisplay');
-    const confirmPayBtn = document.getElementById('confirmPayBtn');
-    const cancelQrReadBtn = document.getElementById('cancelQrReadBtn');
-    const chargeSection = document.getElementById('chargeSection');
-    const chargeAmountInput = document.getElementById('chargeAmountInput');
-    const confirmChargeBtn = document.getElementById('confirmChargeBtn');
-    const cancelChargeBtn = document.getElementById('cancelChargeBtn');
-    const predictedBalanceDisplay = document.getElementById('predictedBalanceDisplay'); 
-    const predictedBalanceContainer = document.getElementById('predictedBalanceContainer'); 
-    const paymentCompletionSection = document.getElementById('paymentCompletionSection');
-    const completedAmountEl = document.getElementById('completedAmount');
-    const completedShopIdEl = document.getElementById('completedShopId');
-    const backToMainFromCompletionBtn = document.getElementById('backToMainFromCompletionBtn');
-    const chargeCompletionSection = document.getElementById('chargeCompletionSection');
-    const chargedAmountEl = document.getElementById('chargedAmount');
-    const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
+    const mainPaymentSection = document.getElementById('mainPaymentSection');
+    const showQrReaderBtn = document.getElementById('showQrReaderBtn');
+    const showChargeBtn = document.getElementById('showChargeBtn');
 
+    const qrReaderSection = document.getElementById('qrReaderSection');
+    const qrCameraVideo = document.getElementById('qrCameraVideo');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const cameraStatus = document.getElementById('cameraStatus');
+
+    const scannedAmountEl = document.getElementById('scannedAmount');
+    const readAmountDisplay = document.getElementById('readAmountDisplay');
+    const confirmPayBtn = document.getElementById('confirmPayBtn');
+    const cancelQrReadBtn = document.getElementById('cancelQrReadBtn');
+
+    const chargeSection = document.getElementById('chargeSection');
+    const chargeAmountInput = document.getElementById('chargeAmountInput');
+    const confirmChargeBtn = document.getElementById('confirmChargeBtn');
+    const cancelChargeBtn = document.getElementById('cancelChargeBtn');
+    const predictedBalanceDisplay = document.getElementById('predictedBalanceDisplay');
+    const predictedBalanceEl = document.getElementById('predictedBalance');
+
+    const paymentCompletionSection = document.getElementById('paymentCompletionSection');
+    const completedAmountEl = document.getElementById('completedAmount');
+    const completedShopIdEl = document.getElementById('completedShopId');
+    const backToMainFromCompletionBtn = document.getElementById('backToMainFromCompletionBtn');
+
+    const chargeCompletionSection = document.getElementById('chargeCompletionSection');
+    const chargedAmountEl = document.getElementById('chargedAmount');
+    const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
     // --- 定数 ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
