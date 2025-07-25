@@ -7,14 +7,16 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <!-- Firebase SDKの読み込み -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
     <script>
-        // Firebaseコンソールで取得した設定情報を貼り付け済み
-     const firebaseConfig = {
+        // あなたのFirebaseプロジェクトの設定情報
+        const firebaseConfig = {
             apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10",
             authDomain: "my-paypay-sim-45735.firebaseapp.com",
-            databaseURL: "https://my-paypay-sim-45735-default-rtdb.firebaseio.com/", // Firebaseコンソールで確認したURL
+            databaseURL: "https://my-paypay-sim-45735-default-rtdb.firebaseio.com/", // **変更点:** Firebaseコンソールで確認したURLに更新
             projectId: "my-paypay-sim-45735",
             storageBucket: "my-paypay-sim-45735.firebasestorage.app",
             messagingSenderId: "310980051016",
@@ -28,7 +30,7 @@
     </script>
 </head>
 <body>
-
+    
     <div class="container app-container" id="appContainer">
         <div class="header">
             <h1 class="app-title">顧客アプリ</h1>
@@ -41,8 +43,8 @@
 
         <div class="main-payment-section" id="mainPaymentSection">
             <p class="section-description">店舗のQRコードを読み取って決済します</p>
-            <button id="showQrReaderBtn" class="action-btn primary-btn large-btn">
-                <span class="icon">📸</span> 店舗QRコードを読み取る
+            <button id="showQrReaderBtn" class="action-btn qr-toggle-btn large-btn">
+                <span class="icon">📷</span> 店舗QRコードを読み取る
             </button>
             <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
                 <span class="icon">➕</span> チャージする
@@ -50,44 +52,40 @@
         </div>
 
         <div class="qr-reader-section hidden" id="qrReaderSection">
-            <h2 class="section-title">QRコード読み取り</h2>
-            <div class="card">
-                <p class="qr-instruction">
-                    店舗のQRコードをカメラにかざしてください。
-                </p>
-                <div class="qr-camera-container">
-                    <video id="qrCameraVideo" class="qr-camera-video" autoplay playsinline></video>
-                    <canvas id="qrCanvas" class="qr-camera-area"></canvas>
-                </div>
-                <p class="camera-status" id="cameraStatus">カメラを起動中...</p>
-                <p class="read-amount-display hidden" id="readAmountDisplay">
-                    支払金額: <span id="scannedAmount">¥ 0</span>
-                </p>
-                <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">
-                    <span class="icon">✅</span> この金額で支払う
-                </button>
+            <h2 class="section-title-small">QRコード読み取り</h2>
+            <div class="qr-camera-feed">
+                <video id="qrCameraVideo" class="camera-preview" playsinline></video>
+                <!-- **変更点:** qrCanvasはhidden属性を初期状態では持たないように変更。JSで制御 -->
+                <canvas id="qrCanvas"></canvas> 
             </div>
-            <button id="cancelQrReadBtn" class="toggle-btn back-btn">
-                <span class="icon">◀</span> キャンセル
+            <p id="cameraStatus" class="status-message"></p>
+            <p class="scanned-amount-display" id="readAmountDisplay">
+                読み取り金額: <span id="scannedAmount">¥ 0</span>
+            </p>
+            <button id="confirmPayBtn" class="primary-btn action-btn" disabled>
+                <span class="icon">✅</span> 支払う
+            </button>
+            <button id="cancelQrReadBtn" class="secondary-btn toggle-btn">
+                <span class="icon">❌</span> キャンセル
             </button>
         </div>
 
         <div class="charge-section hidden" id="chargeSection">
             <h2 class="section-title">チャージ</h2>
-            <div class="card">
-                <div class="input-group">
-                    <label for="chargeAmountInput">チャージ金額:</label>
-                    <input type="number" id="chargeAmountInput" placeholder="チャージする金額を入力" min="1" value="1000">
-                </div>
-                <p class="predicted-balance-display" id="predictedBalanceDisplay">
-                    チャージ後の残高: <span id="predictedBalance">¥ 0</span>
-                </p>
-                <button id="confirmChargeBtn" class="primary-btn action-btn">
-                    <span class="icon">💰</span> チャージを実行
-                </button>
+            <div class="input-group">
+                <label for="chargeAmountInput">チャージ金額:</label>
+                <input type="number" id="chargeAmountInput" placeholder="チャージ金額を入力" min="1" value="1000">
             </div>
-            <button id="cancelChargeBtn" class="toggle-btn back-btn">
-                <span class="icon">◀</span> メイン画面に戻る</button>
+            <!-- **変更点:** predicted-balanceを表示するpタグにidを追加 -->
+            <p class="predicted-balance" id="predictedBalanceContainer"> 
+                チャージ後残高: <span id="predictedBalanceDisplay">¥ 0</span>
+            </p>
+            <button id="confirmChargeBtn" class="primary-btn action-btn">
+                <span class="icon">➕</span> チャージを実行
+            </button>
+            <button id="cancelChargeBtn" class="secondary-btn toggle-btn">
+                <span class="icon">❌</span> キャンセル
+            </button>
         </div>
 
         <div class="payment-completion-section hidden" id="paymentCompletionSection">
@@ -112,12 +110,13 @@
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">支払い完了履歴</h2>
+            <h2 class="section-title">支払い完了履歴</h2> 
             <ul id="transactionHistory"></ul>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- jsqr.min.js は customer_script.js より前に読み込む必要があります -->
+    <script src="jsqr.min.js"></script>
     <script src="customer_script.js"></script>
 </body>
 </html>
