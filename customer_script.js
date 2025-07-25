@@ -1,4 +1,5 @@
-    // --- DOM要素の取得 ---
+document.addEventListener('DOMContentLoaded', () => {
+// --- DOM要素の取得 ---
     const appContainer = document.getElementById('appContainer');
     const currentBalanceEl = document.getElementById('currentBalance');
     const transactionHistoryEl = document.getElementById('transactionHistory');
