@@ -22,9 +22,9 @@
         };
         // Firebaseを初期化
         firebase.initializeApp(firebaseConfig);
-        // Realtime Databaseのインスタンスを取得
-        // **変更点:** constを削除し、databaseをグローバル変数として定義
-        database = firebase.database(); 
+        // Realtime Databaseのインスタンスをグローバルなwindowオブジェクトに割り当て
+        // **変更点:** window.database = ... で明示的にグローバル化
+        window.database = firebase.database(); 
     </script>
 </head>
 <body>
