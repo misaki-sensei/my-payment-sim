@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let videoStream = null;
     let qrScanInterval = null;
 
+        // --- Firebase Realtime Database 参照の取得 ---
+    // **変更点:** database変数がwindowオブジェクトから取得できることを想定
+    const paymentStatusesRef = window.database.ref('paymentStatuses'); 
+    
     // --- 関数 ---
 
     const updateBalanceDisplay = () => {
