@@ -1,5 +1,6 @@
+// customer_script.js (Firebase連携版)
 document.addEventListener('DOMContentLoaded', () => {
-// --- DOM要素の取得 ---
+    // --- DOM要素の取得 ---
     const appContainer = document.getElementById('appContainer');
     const currentBalanceEl = document.getElementById('currentBalance');
     const transactionHistoryEl = document.getElementById('transactionHistory');
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chargedAmountEl = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
+
     // --- 定数 ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
@@ -62,7 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 関数 ---
 
     const updateBalanceDisplay = () => {
-        currentBalanceEl.textContent = `¥ ${currentBalance.toLocaleString()}`;
+        currentBalanceEl.textContent = `¥ ${balance.toLocaleString()}`;
+        localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance.toString());
     };
 
     const updateHistoryDisplay = () => {
