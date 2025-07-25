@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // **変更点:** デバッグログ: database変数の型と値を確認
-    console.log("CUSTOMER_SCRIPT: database variable type at DOMContentLoaded:", typeof database);
-    console.log("CUSTOMER_SCRIPT: database variable value at DOMContentLoaded:", database);
+    console.log("CUSTOMER_SCRIPT: database variable type at DOMContentLoaded:", typeof window.database);
+    console.log("CUSTOMER_SCRIPT: database variable value at DOMContentLoaded:", window.database);
 
     // --- DOM要素の取得 ---
     const appContainer = document.getElementById('appContainer');
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedTransactionId = ''; // 追加: 読み取った取引ID
 
     // --- Firebase Realtime Database 参照の取得 ---
-    // **変更点:** database変数がwindowオブジェクトから取得できることを想定
+    // **変更点:** window.databaseから参照を取得
     const paymentStatusesRef = window.database.ref('paymentStatuses'); 
 
     // --- 関数 ---
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (qrAnimationFrameRequest) { 
             cancelAnimationFrame(qrAnimationFrameRequest);
-            qrAnimationFrameRequest = null; // **変更点:** IDをクリア
+            qrAnimationFrameRequest = null; 
         }
         cameraStatus.textContent = ''; 
         const ctx = qrCanvas.getContext('2d');
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         confirmPayBtn.disabled = false; 
 
                         cancelAnimationFrame(qrAnimationFrameRequest); 
-                        qrAnimationFrameRequest = null; // **変更点:** IDをクリア
+                        qrAnimationFrameRequest = null; 
                         return; 
                     } else {
                         cameraStatus.textContent = '不正なQRコード形式です。必要な情報が不足しています。';
@@ -351,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePredictedBalance(); 
 
     // --- イベントリスナー ---
+    // **変更点:** チャージボタンとQRリーダーボタンのイベントリスナーは既に存在
     showQrReaderBtn.addEventListener('click', () => showSection(qrReaderSection));
     showChargeBtn.addEventListener('click', () => showSection(chargeSection));
 
