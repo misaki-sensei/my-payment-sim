@@ -1,5 +1,20 @@
-// customer_script.js (Firebase連携版)
 document.addEventListener('DOMContentLoaded', () => {
+    // **変更点:** デバッグログ: database変数の型と値を確認
+    console.log("CUSTOMER_SCRIPT: database variable type at DOMContentLoaded:", typeof window.database);
+    console.log("CUSTOMER_SCRIPT: database variable value at DOMContentLoaded:", window.database);
+
+    // **追加:** window.database が undefined の場合、早期にエラーをログして処理を中断
+    if (typeof window.database === 'undefined' || window.database === null) {
+        console.error("CUSTOMER_SCRIPT ERROR: Firebase database instance (window.database) is not defined. Ensure Firebase is initialized correctly in customer.html before this script.");
+        // alert("アプリの初期化に失敗しました。ページをリロードしてください。"); // alertは使用しない
+        // ユーザーにメッセージを表示する代替手段を検討
+        const appContainer = document.getElementById('appContainer');
+        if (appContainer) {
+            appContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">アプリの初期化に失敗しました。<br>ページをリロードするか、コンソールを確認してください。</div>';
+        }
+        return; // これ以上処理を進めない
+    }
+
     // --- DOM要素の取得 ---
     const appContainer = document.getElementById('appContainer');
     const currentBalanceEl = document.getElementById('currentBalance');
