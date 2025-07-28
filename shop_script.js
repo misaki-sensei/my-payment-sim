@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrDisplaySection = document.getElementById('qrDisplaySection');
     let qrCodeCanvas = document.getElementById('qrCodeCanvas'); 
     const qrUrlText = document.getElementById('qrUrlText'); // 追加された要素
-    const paymentStatusText = document.getElementById('paymentStatusText'); // ID変更
-    const receivedPaymentInfoEl = document.getElementById('receivedPaymentInfo'); // ID変更
+    const paymentStatusMessage = document.getElementById('paymentStatusMessage'); // ID変更
+    const paymentReceivedSection = document.getElementById('paymentReceivedSection'); // ID変更
     const resetAppBtn = document.getElementById('resetAppBtn');
     const shopTransactionHistoryEl = document.getElementById('shopTransactionHistory');
 
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Firebase Realtime Databaseに支払いリクエスト情報を書き込む
         try {
-            await db.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).set({
+            await database.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).set({
                 amount: amount,
                 shopId: SHOP_ID,
                 transactionId: currentExpectedTransactionId,
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const listenForPaymentStatus = () => {
         // 以前のリスナーがあれば解除
         if (paymentStatusListener) {
-            db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
+            database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
             paymentStatusListener = null;
         }
 
@@ -215,12 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 // 監視を停止し、現在の取引IDをクリア
-                db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
+                database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
                 paymentStatusListener = null;
                 currentExpectedTransactionId = null;
 
                 // Firebaseから支払いステータスを削除（この取引は完了したので）
-                db.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
+                database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
                     console.log("Payment status removed from Firebase after processing.");
                 }).catch(error => {
                     console.error("Error removing payment status from Firebase:", error);
@@ -251,20 +251,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 監視中のリスナーがあれば解除
         if (paymentStatusListener) {
-            db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
+            database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
             paymentStatusListener = null;
         }
 
         // Firebase上の現在の支払いリクエストとステータスをクリア
         if (currentExpectedTransactionId) {
             try {
-                await db.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).remove();
+                await database.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).remove();
                 console.log("Current payment request removed from Firebase.");
             } catch (error) {
                 console.error("Error removing payment request from Firebase:", error);
             }
             try {
-                await db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
+                await database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
                 console.log("Current payment status removed from Firebase:", error);
             } catch (error) {
                 console.error("Error removing payment status from Firebase:", error);
