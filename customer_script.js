@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 支払い完了ステータスをFirebaseに書き込む
         try {
-            await db.ref(PAYMENT_STATUS_DB_PATH + scannedTransactionId).set({
+            await window.database.ref(PAYMENT_STATUS_DB_PATH + scannedTransactionId).set({
                 status: 'success',
                 amount: scannedPaymentAmount,
                 shopId: scannedShopId,
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Payment status written to Firebase successfully.");
 
             // 支払いリクエスト情報をFirebaseから削除 (一度きりの取引のため)
-            await db.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
+            await window.database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
             console.log("Payment request removed from Firebase.");
 
         } catch (error) {
