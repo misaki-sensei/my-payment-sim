@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
 
                             // Firebaseから店舗からの支払いリクエスト情報を取得
-                            const snapshot = await db.ref(PAYMENT_REQUEST_DB_PATH + transactionId).once('value');
+                            const snapshot = await window.database.ref(PAYMENT_REQUEST_DB_PATH + transactionId).once('value');
                             const paymentRequest = snapshot.val();
 
                             if (!paymentRequest) {
