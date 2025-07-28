@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 指定された取引IDの支払いステータスを監視
-        paymentStatusListener = db.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).on('value', (snapshot) => {
+        paymentStatusListener = database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).on('value', (snapshot) => {
             const statusData = snapshot.val();
 
             if (statusData && statusData.status === 'success') {
