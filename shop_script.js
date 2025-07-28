@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let qrCodeCanvas = document.getElementById('qrCodeCanvas'); 
     const qrUrlText = document.getElementById('qrUrlText'); // 追加された要素
     const paymentStatusText = document.getElementById('paymentStatusMessage'); // ID変更
-    const paymentReceivedPaymentInfoEl = document.getElementById('paymentReceivedSection'); // ID変更
+    const ReceivedPaymentInfoEl = document.getElementById('paymentReceivedSection'); // ID変更
     const resetAppBtn = document.getElementById('resetAppBtn');
     const shopTransactionHistoryEl = document.getElementById('shopTransactionHistory');
 
