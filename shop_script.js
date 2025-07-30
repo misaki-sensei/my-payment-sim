@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentExpectedTransactionId = null;
 
         // QRコード描画エリアをリセット (新しいCanvas要素に置き換える)
-        if (qrCodeCanvas) {
+        /*if (qrCodeCanvas) {
             const oldCanvas = qrCodeCanvas;
             const newCanvas = document.createElement('canvas');
             newCanvas.id = oldCanvas.id;
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
             qrCodeCanvas = document.getElementById('qrCodeCanvas'); // 新しいCanvas要素を再取得
             qrCode = null; // qrcodeインスタンスもリセット
-        }
+        }*/
     });
 
     backToMainFromShopCompletionBtn.addEventListener('click', () => {
