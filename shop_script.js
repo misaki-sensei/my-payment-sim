@@ -5,8 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentAmountInput = document.getElementById('paymentAmount');
     const generateQrBtn = document.getElementById('generateQrBtn');
     const qrDisplaySection = document.getElementById('qrDisplaySection');
-    // qrCodeCanvas はQRコードが描画されるコンテナdivになる
-    const qrCodeContainer = document.getElementById('qrCodeCanvas'); // IDをqrCodeContainerに変更 (HTML側も変更する)
+    let qrCodeCanvas = document.getElementById('qrCodeCanvas'); 
     const qrUrlText = document.getElementById('qrUrlText'); // 追加された要素
     const paymentStatusText = document.getElementById('paymentStatusMessage'); // ID変更
     const receivedPaymentInfoEl = document.getElementById('paymentReceivedSection'); // ID変更
@@ -33,10 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let shopTransactions = [];
     let currentExpectedTransactionId = null; // 現在QRコードで提示している取引ID
     let qrCode = null; // QRCodeインスタンスを保持
-
-    // QRCodeインスタンスを格納する変数 (グローバルスコープまたは適切なスコープ)
-    //let qrCodeInstance = null; // この変数名は使わない方が良い、qrCodeで統一
-
     let paymentStatusListener = null; // Firebaseのリスナーを保持
 
     // --- 関数 ---
@@ -91,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${SHOP_ID}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     };
 
-    const generateAndDisplayQrCode = async () => {
+    const generateAndDisplayQrCode = async () => { // asyncを追加
         const amount = parseFloat(paymentAmountInput.value);
 
         if (isNaN(amount) || amount <= 0) {
@@ -106,17 +101,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const dummyCustomerId = `USER-${Math.floor(Math.random() * 9000) + 1000}`;
 
         // QRコードに埋め込むデータ（クエリ文字列形式）
+        // このデータを顧客側アプリが解析します
         const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
+        
+        // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを作成する
+        /**if (qrCodeCanvas) {
+            const oldCanvas = qrCodeCanvas;
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = oldCanvas.id;
+            newCanvas.className = oldCanvas.className;
+            newCanvas.setAttribute('aria-label', `支払い金額未設定のQRコード表示エリア`);
+            oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+            qrCodeCanvas = newCanvas; // 新しいCanvas要素を再取得
+            qrCode = null;
+        }**/
 
-        if (qrCodeContainer) { // ここをqrCodeContainerでチェック
-            // 古いQRコードがあれば削除（divの子要素をクリア）
-            qrCodeContainer.innerHTML = ''; // ★重要：コンテナの内容をクリア★
-
-            // 既存のQRCodeインスタンスがあればそれを再利用し、なければ新規作成
-            // QRCodeライブラリは、渡された要素の子としてQRコードを生成するので、
-            // new QRCode()を呼び出すたびに新しいQRコードが追加されてしまう。
-            // そのため、毎回新しいインスタンスを作成し、古いものはクリアする方が確実。
-            qrCode = new QRCode(qrCodeContainer, { // qrCodeContainerにQRコードを生成
+        if (qrCodeCanvas) {
+            qrCodeCanvas.textContent = "";
+            qrCode = new QRCode(qrCodeCanvas, { 
                 text: qrData,
                 width: 200,
                 height: 200,
@@ -124,10 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
-            // aria-label はコンテナdivに付与するので、HTMLで設定済み
-            qrCodeContainer.setAttribute('aria-label', `支払い金額${amount.toLocaleString()}円のQRコード（店舗ID: ${SHOP_ID}, 取引ID: ${currentExpectedTransactionId}）`);
+            qrCodeCanvas.setAttribute('aria-label', `支払い金額${amount.toLocaleString()}円のQRコード（店舗ID: ${SHOP_ID}, 取引ID: ${currentExpectedTransactionId}）`);
         } else {
-            console.error('QRコードを描画するためのコンテナ要素が見つかりません。HTMLを確認してください。');
+            console.error('QRコードを描画するためのCanvas要素が見つかりません。HTMLを確認してください。');
             alert('QRコード表示に問題が発生しました。ブラウザのコンソールを確認してください。');
             showSection(mainShopSection);
             return;
@@ -240,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- イベントリスナー ---
     generateQrBtn.addEventListener('click', generateAndDisplayQrCode);
 
-    resetAppBtn.addEventListener('click', async () => {
+    resetAppBtn.addEventListener('click', async () => { // asyncを追加
         showSection(mainShopSection); // メインセクションに戻る
         paymentAmountInput.value = '0';
         paymentStatusText.innerHTML = '<span class="icon">⏳</span> 顧客からの支払い待ち...';
@@ -264,19 +265,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 await database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
-                console.log("Current payment status removed from Firebase.");
+                console.log("Current payment status removed from Firebase:", error);
             } catch (error) {
                 console.error("Error removing payment status from Firebase:", error);
             }
         }
         currentExpectedTransactionId = null;
 
-        // QRコード描画エリアをリセット (コンテナdivの内容をクリア)
-        if (qrCodeContainer) {
-            qrCodeContainer.innerHTML = ''; // コンテナdivの子要素をすべて削除してクリア
-            qrCode = null; // QRCodeインスタンスもリセット
-            // aria-labelも初期状態に戻す (HTMLでdivに直接書かれているので不要だが、念のため)
-            qrCodeContainer.setAttribute('aria-label', '支払い金額未設定のQRコード表示エリア');
+        // QRコード描画エリアをリセット (新しいCanvas要素に置き換える)
+        if (qrCodeCanvas) {
+            const oldCanvas = qrCodeCanvas;
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = oldCanvas.id;
+            newCanvas.className = oldCanvas.className;
+            newCanvas.setAttribute('aria-label', '支払い金額未設定のQRコード表示エリア');
+            oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+            qrCodeCanvas = document.getElementById('qrCodeCanvas'); // 新しいCanvas要素を再取得
+            qrCode = null; // qrcodeインスタンスもリセット
         }
     });
 
