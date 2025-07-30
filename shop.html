@@ -46,16 +46,18 @@
             </button>
         </div>
 
-<div class="qr-code-display">
-    <div id="qrCodeCanvas" class="qr-image-canvas" aria-label="支払い金額未設定のQRコード表示エリア"></div>
-    <p class="qr-info">
-        顧客アプリでこのQRコードを読み取ってください。
-    </p>
-    <p class="small-text url-text" id="qrUrlText"></p>
-    <p class="small-text">
-        (金額と店舗IDが含まれています)
-    </p>
-</div>
+        <div class="qr-display-section card hidden" id="qrDisplaySection">
+            <h2 class="section-title-small">顧客提示用QRコード</h2>
+            <div class="qr-code-display">
+                <div id="qrCodeCanvas" class="qr-image-canvas" aria-label="支払い金額未設定のQRコード表示エリア"></div>
+                <p class="qr-info">
+                    顧客アプリでこのQRコードを読み取ってください。
+                </p>
+                <p class="small-text url-text" id="qrUrlText"></p>
+                <p class="small-text">
+                    (金額と店舗IDが含まれています)
+                </p>
+            </div>
             <button id="resetAppBtn" class="secondary-btn">
                 <span class="icon">🔄</span> リセット
             </button>
