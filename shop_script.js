@@ -113,8 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 既存のQRCodeインスタンスがあればそれを再利用し、なければ新規作成
             if (qrCode) {
-                qrCode.makeCode(qrData); // 既存インスタンスで新しいデータを描画
-            } else {
+                qrCodeCanvas.textContent = "";
                 qrCode = new QRCode(qrCodeCanvas, {
                     text: qrData,
                     width: 200,
