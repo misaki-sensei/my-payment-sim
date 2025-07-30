@@ -106,14 +106,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (qrCodeCanvas) {
             // canvasの内容をクリアする
-            const context = qrCodeCanvas.getContext('canvas');
+            const context = qrCodeCanvas.getContext('2d');
             if (context) {
                 context.clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
             }
 
             // 既存のQRCodeインスタンスがあればそれを再利用し、なければ新規作成
             if (qrCode) {
-                qrCodeCanvas.textContent = "";
+                qrCode.makeCode(qrData); // 既存インスタンスで新しいデータを描画
+            } else {
                 qrCode = new QRCode(qrCodeCanvas, {
                     text: qrData,
                     width: 200,
@@ -271,13 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // QRコード描画エリアをリセット (canvasの内容をクリアし、qrCodeインスタンスもnullにする)
         if (qrCodeCanvas) {
-            const oldCanvas = qrCodeCanvas;
-            const newCanvas = document.createElement('canvas');
-            newCanvas.id = oldCanvas.id;
-            newCanvas.className = oldCanvas.className;
-            newCanvas.setAttribute('aria-label', '支払い金額未設定のQRコード表示エリア');
-            oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-            qrCodeCanvas = document.getElementById('qrCodeCanvas'); // 新しいCanvas要素を再取得
+            const context = qrCodeCanvas.getContext('2d');
+            if (context) {
+                context.clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height); // canvasの内容をクリア
+            }
             qrCode = null; // qrcodeインスタンスもリセット
         }
     });
