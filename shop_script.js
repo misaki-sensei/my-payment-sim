@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // QRコード描画エリアをリセット (canvasの内容をクリアし、qrCodeインスタンスもnullにする)
         if (qrCodeCanvas) {
             const oldCanvas = qrCodeCanvas;
-            const context = qrCodeCanvas.getContext('2d');
+            const context = qrCodeCanvas.getContext('canvas');
             if (context) {
                 context.clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height); // canvasの内容をクリア
             }
