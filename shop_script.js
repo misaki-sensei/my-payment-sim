@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 await database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
-                console.log("Current payment status removed from Firebase:", error);
+                console.log("Current payment request removed from Firebase.");
             } catch (error) {
                 console.error("Error removing payment status from Firebase:", error);
             }
