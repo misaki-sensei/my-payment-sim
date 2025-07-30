@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentAmountInput = document.getElementById('paymentAmount');
     const generateQrBtn = document.getElementById('generateQrBtn');
     const qrDisplaySection = document.getElementById('qrDisplaySection');
-    let qrCodeCanvas = document.getElementById('qrCodeCanvas'); 
+    let qrCodeCanvas = document.getElementById('qrCodeCanvas');
     const qrUrlText = document.getElementById('qrUrlText'); // 追加された要素
     const paymentStatusText = document.getElementById('paymentStatusMessage'); // ID変更
     const receivedPaymentInfoEl = document.getElementById('paymentReceivedSection'); // ID変更
@@ -103,36 +103,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // QRコードに埋め込むデータ（クエリ文字列形式）
         // このデータを顧客側アプリが解析します
         const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
-        
-        // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを作成する
-        /**if (qrCodeCanvas) {
+
+        // --- FIX STARTS HERE ---
+        // Clear the existing QR code by replacing the canvas element
+        if (qrCodeCanvas && qrCodeCanvas.parentNode) {
             const oldCanvas = qrCodeCanvas;
             const newCanvas = document.createElement('canvas');
-            newCanvas.id = oldCanvas.id;
+            newCanvas.id = oldCanvas.id; // Keep the same ID
             newCanvas.className = oldCanvas.className;
             newCanvas.setAttribute('aria-label', `支払い金額未設定のQRコード表示エリア`);
             oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-            qrCodeCanvas = newCanvas; // 新しいCanvas要素を再取得
-            qrCode = null;
-        }**/
-
-        if (qrCodeCanvas) {
-            qrCodeCanvas.textContent = "";
-            qrCode = new QRCode(qrCodeCanvas, { 
-                text: qrData,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-            qrCodeCanvas.setAttribute('aria-label', `支払い金額${amount.toLocaleString()}円のQRコード（店舗ID: ${SHOP_ID}, 取引ID: ${currentExpectedTransactionId}）`);
-        } else {
+            qrCodeCanvas = newCanvas; // Re-assign qrCodeCanvas to the new element
+            qrCode = null; // Clear the old QRCode instance
+        } else if (!qrCodeCanvas) {
             console.error('QRコードを描画するためのCanvas要素が見つかりません。HTMLを確認してください。');
             alert('QRコード表示に問題が発生しました。ブラウザのコンソールを確認してください。');
             showSection(mainShopSection);
             return;
         }
+
+        qrCode = new QRCode(qrCodeCanvas, {
+            text: qrData,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        qrCodeCanvas.setAttribute('aria-label', `支払い金額${amount.toLocaleString()}円のQRコード（店舗ID: ${SHOP_ID}, 取引ID: ${currentExpectedTransactionId}）`);
+        // --- FIX ENDS HERE ---
 
         showSection(qrDisplaySection); // QR表示セクションを表示
         qrUrlText.textContent = `QRデータ: ${qrData}`; // QRデータをテキストでも表示
@@ -265,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 await database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
-                console.log("Current payment status removed from Firebase:", error);
+                console.log("Current payment status removed from Firebase."); // Removed 'error' from here
             } catch (error) {
                 console.error("Error removing payment status from Firebase:", error);
             }
