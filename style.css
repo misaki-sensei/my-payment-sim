@@ -317,9 +317,10 @@ input[type="text"] {
     padding: 10px 0;
     border-top: 1px dashed var(--border-light);
     border-bottom: 1px dashed var(--border-light);
-    white-space: nowrap; /* ★維持: 折り返しを防ぐ */
-    overflow: hidden; /* ★維持: 溢れたテキストを隠す */
-    text-overflow: ellipsis; /* ★維持: 溢れたテキストを省略符号で表示 */
+    /* white-space: nowrap; ★削除: 折り返しを許可 */
+    /* overflow: hidden; ★削除: 溢れたテキストを隠さない */
+    /* text-overflow: ellipsis; ★削除: 溢れたテキストを省略符号で表示しない */
+    white-space: normal; /* 明示的に折り返しを許可 */
 }
 .read-amount-display span {
     color: var(--paypay-red);
