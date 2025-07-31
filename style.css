@@ -437,6 +437,7 @@ input[type="text"] {
     font-weight: bold;
     color: var(--paypay-dark-blue);
     margin: 0;
+    white-space: nowrap; /* 折り返しを防ぐために追加 */
 }
 
 .completed-amount {
@@ -445,6 +446,7 @@ input[type="text"] {
     color: var(--paypay-red);
     margin: 0;
     letter-spacing: -0.02em;
+    white-space: nowrap; /* 折り返しを防ぐために追加 */
 }
 
 .thanks-message {
@@ -527,6 +529,7 @@ input[type="text"] {
     align-items: center;
     font-size: 0.95em;
     transition: background-color 0.2s ease;
+    white-space: nowrap; /* 折り返しを防ぐために追加 */
 }
 
 #transactionHistory li:last-child, #shopTransactionHistory li:last-child {
