@@ -14,10 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 支払い完了時に表示する新しいセクションの要素
     const paymentReceivedSection = document.getElementById('paymentReceivedSection'); // 新しいセクション
-    const receivedAmountEl = document.getElementById('receivedAmount'); // 新しいセクション内の要素
-    const receivedCustomerInfoNewEl = document.getElementById('receivedCustomerInfo'); // 新しいセクション内の要素
+    const receivedAmountEl = document.getElementById('receivedAmount'); // 新しいセクション内の要素 (現在は使わないがDOM取得は維持)
+    const receivedCustomerInfoNewEl = document.getElementById('receivedCustomerInfo'); // 新しいセクション内の要素 (現在は使わないがDOM取得は維持)
     const backToMainFromShopCompletionBtn = document.getElementById('backToMainFromShopCompletionBtn');
-    const completionDetailsEl = document.getElementById('completionDetails'); // 新しく追加する要素
+    const completionDetailsEl = document.getElementById('completionDetails'); // 1行表示用の新しい要素
 
     // --- 定数 ---
     const SHOP_ID = 'MOCKSHOP001';
@@ -69,8 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const shortTransactionId = transaction.transactionId ? transaction.transactionId.substring(transaction.transactionId.length - 4) : '';
 
             listItem.innerHTML = `
-                <span>入金完了</span>
-                <span>¥ ${transaction.amount.toLocaleString()}</span>
+                <span class="payment-summary">入金完了 ¥ ${transaction.amount.toLocaleString()}</span>
                 <span class="history-date">${dateStr} ${timeStr} (${transaction.customerId || '不明な顧客'}) [${shortTransactionId}]</span>
             `;
             shopTransactionHistoryEl.appendChild(listItem);
@@ -105,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
         
         // 既存のQRコードがあれば、canvas要素を一度置き換えてから新しいQRコードを作成する
+        // (以前の変更でコメントアウトされた部分は残しています)
         /**if (qrCodeCanvas) {
             const oldCanvas = qrCodeCanvas;
             const newCanvas = document.createElement('canvas');
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentExpectedTransactionId = null;
 
-        // QRコード描画エリアをリセット (新しいCanvas要素に置き換える)
+        // QRコード描画エリアをリセット (以前の変更でコメントアウトされた部分は残しています)
         /*if (qrCodeCanvas) {
             const oldCanvas = qrCodeCanvas;
             const newCanvas = document.createElement('canvas');
