@@ -23,8 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const SHOP_ID = 'MOCKSHOP001';
     const LOCAL_STORAGE_SHOP_HISTORY_KEY = 'shopMockPayPayHistory';
     const COMPLETION_DISPLAY_TIME = 3000;
-    // ★追加: 顧客IDをローカルストレージに保存するためのキー
-    const LOCAL_STORAGE_CUSTOMER_ID_KEY = 'mockPayPayCustomerId';
 
     // Firebase Realtime Databaseのパス (店舗側と顧客側で共通)
     const PAYMENT_REQUEST_DB_PATH = 'paymentRequests/';
@@ -35,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentExpectedTransactionId = null;
     let qrCode = null;
     let paymentStatusListener = null;
-    let currentCustomerId = null; // ★追加: 現在の顧客IDを保持する変数
 
     // --- 関数 ---
     const showSection = (sectionToShow) => {
@@ -71,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 取引IDの末尾4桁を表示
             const shortTransactionId = transaction.transactionId ? transaction.transactionId.substring(transaction.transactionId.length - 4) : '';
 
-            // 入金完了と金額を1行で表示するように結合
+            // ★変更箇所：入金完了と金額を1行で表示するように結合★
             listItem.innerHTML = `
                 <span>入金完了 ¥ ${transaction.amount.toLocaleString()}</span>
                 <span class="history-date">${dateStr} ${timeStr} (${transaction.customerId || '不明な顧客'}) [${shortTransactionId}]</span>
@@ -100,10 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
-        // ★変更: 顧客IDとして currentCustomerId を使用
-        const customerIdToSend = currentCustomerId;
+        const dummyCustomerId = `USER-${Math.floor(Math.random() * 9000) + 1000}`;
 
-        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${customerIdToSend}`;
+        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
 
         if (qrCodeCanvas) {
             qrCodeCanvas.textContent = "";
@@ -134,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: amount,
                 shopId: SHOP_ID,
                 transactionId: currentExpectedTransactionId,
-                customerId: customerIdToSend, // ★変更: 生成または取得した顧客IDを使用
+                customerId: dummyCustomerId,
                 timestamp: new Date().toISOString()
             });
             console.log("Payment request written to Firebase successfully.");
@@ -217,16 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadShopAppData();
     updateShopHistoryDisplay();
     showSection(mainShopSection);
-
-    // ★追加: 顧客IDの初期化ロジック
-    currentCustomerId = localStorage.getItem(LOCAL_STORAGE_CUSTOMER_ID_KEY);
-    if (!currentCustomerId) {
-        // IDがなければ新しく生成して保存
-        // UUID v4 のような形式にするにはさらに工夫が必要ですが、ここでは簡潔に。
-        currentCustomerId = `USER-${Date.now()}-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}`;
-        localStorage.setItem(LOCAL_STORAGE_CUSTOMER_ID_KEY, currentCustomerId);
-    }
-    console.log("Current Customer ID for this device:", currentCustomerId); // デバッグ用
 
     // --- イベントリスナー ---
     generateQrBtn.addEventListener('click', generateAndDisplayQrCode);
