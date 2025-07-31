@@ -317,9 +317,9 @@ input[type="text"] {
     padding: 10px 0;
     border-top: 1px dashed var(--border-light);
     border-bottom: 1px dashed var(--border-light);
-    white-space: nowrap; /* ★追加: 折り返しを防ぐ */
-    overflow: hidden; /* ★追加: 溢れたテキストを隠す */
-    text-overflow: ellipsis; /* ★追加: 溢れたテキストを省略符号で表示 */
+    white-space: nowrap; /* ★維持: 折り返しを防ぐ */
+    overflow: hidden; /* ★維持: 溢れたテキストを隠す */
+    text-overflow: ellipsis; /* ★維持: 溢れたテキストを省略符号で表示 */
 }
 .read-amount-display span {
     color: var(--paypay-red);
@@ -440,7 +440,7 @@ input[type="text"] {
     font-weight: bold;
     color: var(--paypay-dark-blue);
     margin: 0;
-    /* white-space: nowrap; ここを削除し、折り返しを許可します */
+    /* white-space: normal; (明示しない場合はデフォルトで折り返します) */
 }
 
 .completed-amount {
@@ -449,7 +449,7 @@ input[type="text"] {
     color: var(--paypay-red);
     margin: 0;
     letter-spacing: -0.02em;
-    /* white-space: nowrap; ここを削除し、折り返しを許可します */
+    /* white-space: normal; (明示しない場合はデフォルトで折り返します) */
 }
 
 .thanks-message {
@@ -473,6 +473,12 @@ input[type="text"] {
 .charge-completion-section .completion-card {
     background-color: #f0e6ff;
     border: 1px solid #d8baff;
+}
+/* ★追加: チャージ完了メッセージは折り返さない★ */
+.charge-completion-section .completion-message {
+    white-space: nowrap;
+    overflow: hidden; /* 溢れたテキストを隠す */
+    text-overflow: ellipsis; /* 溢れたテキストを省略符号で表示 */
 }
 
 
@@ -537,14 +543,6 @@ input[type="text"] {
     white-space: normal; /* li全体は折り返しを許可 */
 }
 
-/* 履歴項目の最初のspan（金額や説明） */
-#transactionHistory li > span:first-child,
-#shopTransactionHistory li > span:first-child {
-    grid-column: 1 / 2; /* 1列目に配置 */
-    grid-row: 1 / span 2; /* 2行にまたがる */
-    white-space: nowrap; /* 金額表示部分が折り返さないように維持 */
-    align-self: center; /* セル内で垂直中央揃え */
-}
 
 #transactionHistory li:last-child, #shopTransactionHistory li:last-child {
     border-bottom: none;
@@ -572,6 +570,14 @@ input[type="text"] {
     margin-right: 5px;
 }
 
+/* ★変更点: 取引履歴のチャージ項目は折り返さない★ */
+#transactionHistory li.charge > span:first-child,
+#shopTransactionHistory li.charge > span:first-child {
+    grid-column: 1 / 2;
+    grid-row: 1 / span 2;
+    white-space: nowrap; /* チャージ金額は折り返さない */
+    align-self: center;
+}
 
 #transactionHistory li.payment {
     color: var(--paypay-red);
@@ -580,6 +586,15 @@ input[type="text"] {
 #transactionHistory li.payment span:first-child::before {
     content: "💳 ";
     margin-right: 5px;
+}
+
+/* ★変更点: 取引履歴の支払い項目は折り返す★ */
+#transactionHistory li.payment > span:first-child,
+#shopTransactionHistory li.payment > span:first-child {
+    grid-column: 1 / 2;
+    grid-row: 1 / span 2;
+    white-space: normal; /* 支払い金額は折り返す */
+    align-self: center;
 }
 
 /* 年月日のスタイル */
