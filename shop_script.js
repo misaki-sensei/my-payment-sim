@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listenForPaymentStatus();
     };
 
-    cconst showPaymentReceivedCompletionSection = (paymentData) => {
+    const showPaymentReceivedCompletionSection = (paymentData) => {
     // 1行で表示するための変更
     // receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`; // コメントアウトまたは削除
     // receivedCustomerInfoNewEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`; // コメントアウトまたは削除
