@@ -317,10 +317,7 @@ input[type="text"] {
     padding: 10px 0;
     border-top: 1px dashed var(--border-light);
     border-bottom: 1px dashed var(--border-light);
-    /* white-space: nowrap; ★削除: 折り返しを許可 */
-    /* overflow: hidden; ★削除: 溢れたテキストを隠さない */
-    /* text-overflow: ellipsis; ★削除: 溢れたテキストを省略符号で表示しない */
-    white-space: normal; /* 明示的に折り返しを許可 */
+    white-space: normal; /* ★変更: 折り返しを許可 */
 }
 .read-amount-display span {
     color: var(--paypay-red);
@@ -589,12 +586,12 @@ input[type="text"] {
     margin-right: 5px;
 }
 
-/* ★変更点: 取引履歴の支払い項目は折り返す★ */
+/* ★変更点: 取引履歴の支払い項目は折り返さないように変更★ */
 #transactionHistory li.payment > span:first-child,
 #shopTransactionHistory li.payment > span:first-child {
     grid-column: 1 / 2;
     grid-row: 1 / span 2;
-    white-space: normal; /* 支払い金額は折り返す */
+    white-space: nowrap; /* 支払い金額も折り返さない */
     align-self: center;
 }
 
