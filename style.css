@@ -317,6 +317,9 @@ input[type="text"] {
     padding: 10px 0;
     border-top: 1px dashed var(--border-light);
     border-bottom: 1px dashed var(--border-light);
+    white-space: nowrap; /* ★追加: 折り返しを防ぐ */
+    overflow: hidden; /* ★追加: 溢れたテキストを隠す */
+    text-overflow: ellipsis; /* ★追加: 溢れたテキストを省略符号で表示 */
 }
 .read-amount-display span {
     color: var(--paypay-red);
