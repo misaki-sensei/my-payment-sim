@@ -437,7 +437,7 @@ input[type="text"] {
     font-weight: bold;
     color: var(--paypay-dark-blue);
     margin: 0;
-    white-space: nowrap; /* 折り返しを防ぐために追加 */
+    /* white-space: nowrap; ここを削除し、折り返しを許可します */
 }
 
 .completed-amount {
@@ -446,7 +446,7 @@ input[type="text"] {
     color: var(--paypay-red);
     margin: 0;
     letter-spacing: -0.02em;
-    white-space: nowrap; /* 折り返しを防ぐために追加 */
+    /* white-space: nowrap; ここを削除し、折り返しを許可します */
 }
 
 .thanks-message {
@@ -524,21 +524,24 @@ input[type="text"] {
 #transactionHistory li, #shopTransactionHistory li {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
-    display: flex;
-    /* justify-content: space-between; ここを削除 */
-    align-items: center;
+    display: grid; /* FlexboxからGridに変更 */
+    grid-template-columns: auto 1fr; /* 1列目はコンテンツ幅、2列目は残り */
+    grid-template-rows: auto auto; /* 2行 */
+    align-items: center; /* グリッドセル内で垂直中央揃え */
+    gap: 5px 10px; /* 行間5px、列間10px */
     font-size: 0.95em;
     transition: background-color 0.2s ease;
-    gap: 10px; /* 各要素間の間隔を追加 */
     white-space: normal; /* li全体は折り返しを許可 */
 }
 
-/* 履歴項目の最初のspan（金額や説明）を折り返さないようにする */
+/* 履歴項目の最初のspan（金額や説明） */
 #transactionHistory li > span:first-child,
 #shopTransactionHistory li > span:first-child {
+    grid-column: 1 / 2; /* 1列目に配置 */
+    grid-row: 1 / span 2; /* 2行にまたがる */
     white-space: nowrap; /* 金額表示部分が折り返さないように維持 */
+    align-self: center; /* セル内で垂直中央揃え */
 }
-
 
 #transactionHistory li:last-child, #shopTransactionHistory li:last-child {
     border-bottom: none;
@@ -576,9 +579,24 @@ input[type="text"] {
     margin-right: 5px;
 }
 
+/* 年月日のスタイル */
 .history-date {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: normal;
-    /* white-space: normal; はデフォルトなので不要 */
+    grid-column: 2 / 3; /* 2列目 */
+    grid-row: 1 / 2;    /* 1行目 */
+    text-align: right; /* 右寄せ */
+    white-space: normal; /* 折り返し可能 */
+}
+
+/* USRIDのスタイル - HTMLでUSRIDが2番目のspan要素であることを想定 */
+#transactionHistory li span:nth-of-type(2),
+#shopTransactionHistory li span:nth-of-type(2) {
+    grid-column: 2 / 3; /* 2列目 */
+    grid-row: 2 / 3;    /* 2行目 */
+    text-align: right; /* 右寄せ */
+    font-size: 0.8em; /* USRIDは少し小さめに */
+    color: var(--text-secondary);
+    white-space: normal; /* 折り返し可能 */
 }
