@@ -114,7 +114,7 @@ button {
 .secondary-btn { /* リセット */
     background-color: #6c757d;
     color: white;
-    padding: 10px 18px; 
+    padding: 10px 18px;
     font-size: 0.95em;
     box-shadow: none;
 }
@@ -525,17 +525,18 @@ input[type="text"] {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
     display: flex;
-    justify-content: space-between;
+    /* justify-content: space-between; ここを削除 */
     align-items: center;
     font-size: 0.95em;
     transition: background-color 0.2s ease;
-    /* white-space: nowrap; ここを削除し、必要に応じて折り返すようにします */
+    gap: 10px; /* 各要素間の間隔を追加 */
+    white-space: normal; /* li全体は折り返しを許可 */
 }
 
 /* 履歴項目の最初のspan（金額や説明）を折り返さないようにする */
 #transactionHistory li > span:first-child,
 #shopTransactionHistory li > span:first-child {
-    white-space: nowrap;
+    white-space: nowrap; /* 金額表示部分が折り返さないように維持 */
 }
 
 
@@ -579,5 +580,5 @@ input[type="text"] {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: normal;
-    /* white-space: normal; (デフォルト値なので明示的な指定は不要ですが、念のため) */
+    /* white-space: normal; はデフォルトなので不要 */
 }
