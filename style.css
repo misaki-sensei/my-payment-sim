@@ -519,14 +519,12 @@ input[type="text"] {
     background: #a8a8a8;
 }
 
-/* 履歴リストアイテムの表示 */
 #transactionHistory li, #shopTransactionHistory li {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
     display: flex;
-    justify-content: space-between; /* 要素間のスペースを均等に配置 */
-    align-items: baseline; /* ベースラインを揃える */
-    flex-wrap: wrap; /* 画面が狭い場合に折り返す */
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.95em;
     transition: background-color 0.2s ease;
 }
@@ -571,20 +569,4 @@ input[type="text"] {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: normal;
-    margin-left: 10px; /* 金額との間に少し間隔を開ける */
-}
-
-/* レスポンシブデザインの調整例 */
-@media (max-width: 600px) {
-    #transactionHistory li, #shopTransactionHistory li {
-        flex-direction: column; /* スマホでは縦並びにする */
-        align-items: flex-start; /* 左寄せ */
-    }
-    .history-date {
-        margin-left: 0; /* スマホでは左マージンをなくす */
-        margin-top: 2px; /* 上部に少しマージン */
-    }
-    #transactionHistory li span, #shopTransactionHistory li span {
-        white-space: normal; /* 折り返しを許可する */
-    }
 }
