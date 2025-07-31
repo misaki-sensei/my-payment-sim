@@ -231,15 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ★変更: 「QRコードを読み取りました」メッセージの表示と自動非表示
+            // ★変更: 「QRコードを読み取りました」メッセージの表示 (setTimeoutを削除)
             readAmountDisplay.textContent = `QRコードを読み取りました: ¥ ${scannedPaymentAmount.toLocaleString()}`;
             readAmountDisplay.classList.remove('hidden'); // 表示する
 
-            // 2秒後にメッセージを非表示にする
-            setTimeout(() => {
-                readAmountDisplay.classList.add('hidden'); // 非表示にする
-            }, 2000); // 2秒
-
+            // scannedAmountEl と confirmPayBtn は永続的に表示される
             scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`; // 金額を明確に表示
             scannedAmountEl.classList.remove('hidden'); // 金額はそのまま表示
 
@@ -291,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 showSection(mainPaymentSection);
                 // 支払い完了後の各種表示をリセット (任意)
-                readAmountDisplay.classList.add('hidden');
+                readAmountDisplay.classList.add('hidden'); // メッセージも非表示に
                 scannedAmountEl.classList.add('hidden');
                 confirmPayBtn.classList.add('hidden');
             }, COMPLETION_DISPLAY_TIME);
