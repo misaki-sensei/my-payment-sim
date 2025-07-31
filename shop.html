@@ -3,87 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>店舗アプリ (模擬PayPayレジ)</title>
+    <title>店舗アプリ</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="qrcode.min.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <script>
-        // Firebaseコンソールで取得した設定情報を貼り付け済み
-        const firebaseConfig = {
-            apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10",
-            authDomain: "my-paypay-sim-45735.firebaseapp.com",
-            databaseURL: "https://my-paypay-sim-45735-default-rtdb.firebaseio.com/", // Firebaseコンソールで確認したURL
-            projectId: "my-paypay-sim-45735",
-            storageBucket: "my-paypay-sim-45735.firebasestorage.app",
-            messagingSenderId: "310980051016",
-            appId: "1:310980051016:web:38083c1005b783054b587d"
-        };
-        // Firebaseを初期化
-        firebase.initializeApp(firebaseConfig);
-        // Realtime Databaseのインスタンスを取得
-        // **変更点:** constを削除し、databaseをグローバル変数として定義
-        database = firebase.database(); 
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container app-container" id="appContainer">
-        <div class="header">
-            <h1 class="app-title">店舗アプリ</h1>
-            <p class="shop-name">模擬PayPayレジ</p>
-        </div>
+    <div class="container">
+        <header class="header">
+            <h1 class="app-title">PayPay模擬アプリ</h1>
+            <p class="shop-name">店舗向け</p>
+        </header>
 
-        <div class="action-section card" id="mainShopSection">
-            <h2 class="section-title">支払い金額設定</h2>
+        <section id="qr-generate-section" class="card qr-display-section">
+            <h2 class="section-title">QRコード発行</h2>
             <div class="input-group">
-                <label for="paymentAmount">金額:</label>
-                <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" value="0">
+                <label for="amount">金額 (円)</label>
+                <input type="number" id="amount" placeholder="金額を入力" value="1000">
             </div>
-            <button id="generateQrBtn" class="primary-btn action-btn">
-                <span class="icon">🔗</span> QRコードを表示
-            </button>
-        </div>
+            <button id="generate-qr-button" class="primary-btn large-btn">QRコードを生成</button>
+            <p class="small-text">※顧客が読み取ります</p>
+        </section>
 
-        <div class="qr-display-section card hidden" id="qrDisplaySection">
-            <h2 class="section-title-small">顧客提示用QRコード</h2>
+        <section id="qr-display-section" class="card qr-display-section hidden">
+            <h2 class="section-title">顧客QR読み取り用</h2>
             <div class="qr-code-display">
-                <div id="qrCodeCanvas" class="qr-image-canvas" aria-label="支払い金額未設定のQRコード表示エリア"></div>
-                <p class="qr-info">
-                    顧客アプリでこのQRコードを読み取ってください。
-                </p>
-                <p class="small-text url-text" id="qrUrlText"></p>
-                <p class="small-text">
-                    (金額と店舗IDが含まれています)
-                </p>
+                <canvas id="qr-code-canvas"></canvas>
             </div>
-            <button id="resetAppBtn" class="secondary-btn">
-                <span class="icon">🔄</span> リセット
-            </button>
-             <p class="payment-status-message" id="paymentStatusMessage" style="margin-top:15px; font-weight: bold; color: #007bff;">
-                ⏳ 顧客からの支払い待ち...
+            <p class="qr-info">
+                <span>取引金額: <strong id="qr-amount-display"></strong>円</span><br>
+                <span>店舗ID: <strong id="shop-id-display"></strong></span><br>
+                <span class="url-text" id="qrUrlText"></span>
             </p>
-        </div>
 
-        <div class="payment-received-section hidden" id="paymentReceivedSection">
-            <div class="completion-card card">
-                <div class="completion-icon green-bg" role="img" aria-label="入金完了">✅</div>
-                <p class="completion-message">入金が完了しました！</p>
-                <p class="received-amount" id="receivedAmount">¥ 0</p>
-                <p class="received-customer-info" id="receivedCustomerInfo"></p>
-                <p class="thanks-message">ご利用ありがとうございます。</p>
+            <div id="payment-status-section" class="payment-status-section">
+                <p class="status-pending"><span class="icon">⏳</span> 支払い待機中...</p>
+                <p id="payment-complete-message" class="status-success hidden"><span class="icon">✅</span> 支払い完了！</p>
+                <p id="transaction-id-display" class="small-text"></p>
             </div>
-            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
-        </div>
+            <button id="back-to-main-button" class="toggle-btn large-btn">メインに戻る</button>
+        </section>
 
-        <div class="history-section card">
+        <section id="shop-history-section" class="card history-section">
             <h2 class="section-title">支払い完了履歴</h2>
-            <ul id="shopTransactionHistory"></ul>
-        </div>
+            <ul id="shop-history-list">
+                </ul>
+            <button id="clear-shop-history" class="secondary-btn">履歴をリセット</button>
+        </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script src="shop_script.js"></script>
 </body>
 </html>
