@@ -161,16 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
         listenForPaymentStatus();
     };
 
-    const showPaymentReceivedCompletionSection = (paymentData) => {
-        receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`;
-        receivedCustomerInfoNewEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
-        showSection(paymentReceivedSection); // 支払い完了セクションを表示
+    cconst showPaymentReceivedCompletionSection = (paymentData) => {
+    // 1行で表示するための変更
+    // receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`; // コメントアウトまたは削除
+    // receivedCustomerInfoNewEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`; // コメントアウトまたは削除
+    completionDetailsEl.textContent = `¥ ${paymentData.amount.toLocaleString()} が入金されました！ (顧客ID: ${paymentData.customerId || '不明'})`; // 新しい1行表示
+    showSection(paymentReceivedSection); // 支払い完了セクションを表示
 
-        // 一定時間後に自動でメイン画面に戻る
-        setTimeout(() => {
-            showSection(mainShopSection);
-            paymentAmountInput.value = '0'; // 金額をリセット
-        }, COMPLETION_DISPLAY_TIME);
+    // 一定時間後に自動でメイン画面に戻る
+    setTimeout(() => {
+        showSection(mainShopSection);
+        paymentAmountInput.value = '0'; // 金額をリセット
+    }, COMPLETION_DISPLAY_TIME);
     };
 
 
