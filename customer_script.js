@@ -231,14 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ★変更: 「読み取りました」メッセージの表示と自動非表示
-            readAmountDisplay.textContent = `読み取りました: ¥ ${scannedPaymentAmount.toLocaleString()}`;
+            // ★変更: 「QRコードを読み取りました」メッセージの表示と自動非表示
+            readAmountDisplay.textContent = `QRコードを読み取りました: ¥ ${scannedPaymentAmount.toLocaleString()}`;
             readAmountDisplay.classList.remove('hidden'); // 表示する
 
-            // 3秒後にメッセージを非表示にする
+            // 2秒後にメッセージを非表示にする
             setTimeout(() => {
                 readAmountDisplay.classList.add('hidden'); // 非表示にする
-            }, 3000); // 3秒
+            }, 2000); // 2秒
 
             scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`; // 金額を明確に表示
             scannedAmountEl.classList.remove('hidden'); // 金額はそのまま表示
