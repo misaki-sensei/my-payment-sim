@@ -1,4 +1,4 @@
-// customer_script.js (Firebase連携版)
+// customer_script.js
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM要素の取得 ---
     const appContainer = document.getElementById('appContainer');
@@ -14,10 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrCanvas = document.getElementById('qrCanvas');
     const cameraStatus = document.getElementById('cameraStatus');
 
-    const scannedAmountEl = document.getElementById('scannedAmount');
-    const readAmountDisplay = document.getElementById('readAmountDisplay');
-    const confirmPayBtn = document.getElementById('confirmPayBtn');
-    const cancelQrReadBtn = document.getElementById('cancelQrReadBtn');
+    const scannedAmountEl = document.getElementById('scannedAmount'); // QR読み取り後に金額を表示する要素
+    const readAmountDisplay = document.getElementById('readAmountDisplay'); // 「読み取りました」の表示を含む可能性のある要素
+    const confirmPayBtn = document.getElementById('confirmPayBtn'); // 支払い確認ボタン
+    const cancelQrReadBtn = document.getElementById('cancelQrReadBtn'); // QR読み取りキャンセルボタン
 
     const chargeSection = document.getElementById('chargeSection');
     const chargeAmountInput = document.getElementById('chargeAmountInput');
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 定数 ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
-    const COMPLETION_DISPLAY_TIME = 3000;
+    const COMPLETION_DISPLAY_TIME = 3000; // 完了メッセージ表示時間
 
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
     const DAILY_CHARGE_LIMIT = 1000000; // 100万円
@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         balance = parseFloat(localStorage.getItem(LOCAL_STORAGE_BALANCE_KEY)) || 0;
         transactions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_TRANSACTIONS_KEY)) || [];
         dailyCharges = JSON.parse(localStorage.getItem(LOCAL_STORAGE_DAILY_CHARGE_KEY)) || [];
-
         // 日付が変わったらデイリーチャージ履歴をリセット
         const today = new Date().toDateString();
         dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
@@ -149,101 +148,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     const startQrReader = async () => {
         cameraStatus.textContent = 'カメラを起動中...';
-        readAmountDisplay.classList.add('hidden');
-        confirmPayBtn.classList.add('hidden');
-        scannedPaymentAmount = 0;
-        scannedShopId = '';
-        scannedTransactionId = '';
-        scannedCustomerId = '';
+        readAmountDisplay.classList.add('hidden'); // 以前の表示を隠す
+        confirmPayBtn.classList.add('hidden'); // 以前のボタンを隠す
+        scannedAmountEl.textContent = ''; // 以前の金額表示をクリア
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); // 背面カメラを優先
-            qrCameraVideo.srcObject = stream;
-            videoStream = stream; // 後で停止するためにストリームを保存
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            qrCameraVideo.srcObject = videoStream;
+            qrCameraVideo.play();
+            cameraStatus.textContent = 'QRコードを読み取り中...';
 
-            await qrCameraVideo.play();
-            cameraStatus.textContent = 'QRコードを読み取っています...';
-
-            // Canvasのサイズをビデオの解像度に合わせる (重要)
-            qrCameraVideo.addEventListener('loadedmetadata', () => {
+            qrScanInterval = setInterval(() => {
+                const context = qrCanvas.getContext('2d');
+                if (qrCameraVideo.videoWidth === 0 || qrCameraVideo.videoHeight === 0) {
+                    return;
+                }
                 qrCanvas.width = qrCameraVideo.videoWidth;
                 qrCanvas.height = qrCameraVideo.videoHeight;
-            }, { once: true });
+                context.drawImage(qrCameraVideo, 0, 0, qrCanvas.width, qrCanvas.height);
+                const imageData = context.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
 
-
-            const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true });
-            
-
-            qrScanInterval = setInterval(async () => { // asyncを追加
-                if (qrCameraVideo.readyState === qrCameraVideo.HAVE_ENOUGH_DATA) {
-                    // Canvasのサイズが未設定の場合はここで設定
-                    if (qrCanvas.width === 0 || qrCanvas.height === 0) {
-                        qrCanvas.width = qrCameraVideo.videoWidth;
-                        qrCanvas.height = qrCameraVideo.videoHeight;
-                    }
-
-                    qrContext.drawImage(qrCameraVideo, 0, 0, qrCanvas.width, qrCanvas.height);
-                    const imageData = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: "dontInvert", // QRコードの読み取り精度調整
-                    });
-
-                    if (code) {
-                        const qrData = code.data;
-                        console.log("QRコードデータ:", qrData);
-                        stopQrReader(); // 読み取ったらカメラを停止
-
-                        try {
-                            // QRコードデータをURLクエリ文字列として解析
-                            const params = new URLSearchParams(qrData);
-                            const amount = parseFloat(params.get('amount'));
-                            const shopId = params.get('shopId');
-                            const transactionId = params.get('transactionId');
-                            const customerId = params.get('customerId') || ''; // customerIdはオプション
-
-                            if (isNaN(amount) || amount <= 0 || !shopId || !transactionId) {
-                                throw new Error('支払い情報が不足しているか無効です。');
-                            }
-
-                            // Firebaseから店舗からの支払いリクエスト情報を取得
-                            const snapshot = await window.database.ref(PAYMENT_REQUEST_DB_PATH + transactionId).once('value');
-                            const paymentRequest = snapshot.val();
-
-                            if (!paymentRequest) {
-                                throw new Error('店舗からの支払いリクエストがFirebaseに見つかりません。店舗アプリで支払い情報を生成してください。');
-                            }
-
-                            // 読み取った情報とFirebaseのリクエストが一致するか検証
-                            if (paymentRequest.amount !== amount ||
-                                paymentRequest.shopId !== shopId ||
-                                paymentRequest.transactionId !== transactionId) {
-                                throw new Error('読み取ったQRコードの支払い情報が、現在の店舗からの支払いリクエストと一致しません。');
-                            }
-
-                            scannedPaymentAmount = amount;
-                            scannedShopId = shopId;
-                            scannedTransactionId = transactionId;
-                            scannedCustomerId = customerId;
-
-                            scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`;
-                            readAmountDisplay.classList.remove('hidden');
-                            confirmPayBtn.classList.remove('hidden');
-                            cameraStatus.textContent = `QRコードを読み取りました。`;
-
-                        } catch (e) {
-                            cameraStatus.textContent = `QRコードの解析エラー: ${e.message}`;
-                            console.error("QRコード解析エラー:", e);
-                            readAmountDisplay.classList.add('hidden');
-                            confirmPayBtn.classList.add('hidden');
-                        }
-                    }
+                if (code) {
+                    stopQrReader();
+                    qrCodeSuccessCallback(code.data);
                 }
-            }, 100); // 100msごとにQRコードをスキャン
+            }, 100);
         } catch (err) {
-            console.error("カメラアクセスエラー:", err);
-            cameraStatus.textContent = 'カメラの起動に失敗しました。カメラの許可を確認してください。';
-            alert('カメラの起動に失敗しました。ブラウザのカメラアクセス権限を確認してください。');
-            stopQrReader();
+            console.error('カメラの起動に失敗しました:', err);
+            cameraStatus.textContent = 'カメラの起動に失敗しました。';
+            alert('カメラの起動に失敗しました。カメラへのアクセスを許可してください。');
             showSection(mainPaymentSection);
         }
     };
@@ -258,123 +194,132 @@ document.addEventListener('DOMContentLoaded', () => {
             videoStream = null;
         }
         qrCameraVideo.srcObject = null;
-        cameraStatus.textContent = '';
     };
 
-    const handlePayment = async () => { // asyncを追加
-        if (scannedPaymentAmount <= 0 || !scannedShopId || !scannedTransactionId) {
-            alert('支払う金額が設定されていません。QRコードをもう一度読み込んでください。');
+    const qrCodeSuccessCallback = async (qrData) => {
+        console.log("QR Code detected:", qrData);
+        cameraStatus.textContent = ''; // カメラの状態メッセージをクリア
+
+        // QRデータからパラメータをパース
+        const params = new URLSearchParams(qrData);
+        scannedPaymentAmount = parseFloat(params.get('amount'));
+        scannedShopId = params.get('shopId');
+        scannedTransactionId = params.get('transactionId');
+        scannedCustomerId = params.get('customerId'); // 店舗から送られた顧客IDを保持
+
+        if (isNaN(scannedPaymentAmount) || scannedPaymentAmount <= 0 || !scannedShopId || !scannedTransactionId) {
+            alert('無効なQRコードです。');
             showSection(mainPaymentSection);
             return;
         }
+
+        // 店舗からの支払いリクエストがFirebaseに存在するか確認
+        try {
+            const snapshot = await database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).once('value');
+            const requestData = snapshot.val();
+
+            if (!requestData || requestData.amount !== scannedPaymentAmount || requestData.shopId !== scannedShopId) {
+                alert('この支払いリクエストは無効か、すでに処理済みです。');
+                showSection(mainPaymentSection);
+                return;
+            }
+
+            // 残高チェック
+            if (balance < scannedPaymentAmount) {
+                alert('残高が不足しています！チャージしてください。');
+                showSection(mainPaymentSection);
+                return;
+            }
+
+            // ★変更: 「読み取りました」メッセージの表示と自動非表示
+            readAmountDisplay.textContent = `読み取りました: ¥ ${scannedPaymentAmount.toLocaleString()}`;
+            readAmountDisplay.classList.remove('hidden'); // 表示する
+
+            // 3秒後にメッセージを非表示にする
+            setTimeout(() => {
+                readAmountDisplay.classList.add('hidden'); // 非表示にする
+            }, 3000); // 3秒
+
+            scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`; // 金額を明確に表示
+            scannedAmountEl.classList.remove('hidden'); // 金額はそのまま表示
+
+            confirmPayBtn.classList.remove('hidden'); // 支払いボタンを表示
+            // QRリーダーセクションに留まる（支払い確認画面として利用）
+            // showSection(qrReaderSection); // この行はコメントアウトまたは削除し、QRリーダーセクションに表示を継続
+        } catch (error) {
+            console.error("Firebaseからの支払いリクエスト取得エラー:", error);
+            alert("支払いリクエストの確認中にエラーが発生しました。");
+            showSection(mainPaymentSection);
+        }
+    };
+
+    const handlePayment = async () => {
         if (balance < scannedPaymentAmount) {
-            alert('残高が不足しています。チャージしてください。');
+            alert('残高が不足しています！');
             return;
         }
 
-        balance -= scannedPaymentAmount;
-        transactions.push({
-            type: 'payment',
-            amount: scannedPaymentAmount,
-            timestamp: new Date().toISOString(),
-            shopId: scannedShopId,
-            transactionId: scannedTransactionId
-        });
-        updateBalanceDisplay();
-        updateHistoryDisplay();
-
-        // 支払い完了ステータスをFirebaseに書き込む
+        // Firebaseに支払い完了ステータスを送信
         try {
-            await window.database.ref(PAYMENT_STATUS_DB_PATH + scannedTransactionId).set({
+            await database.ref(PAYMENT_STATUS_DB_PATH + scannedTransactionId).set({
                 status: 'success',
                 amount: scannedPaymentAmount,
                 shopId: scannedShopId,
-                customerId: scannedCustomerId,
                 transactionId: scannedTransactionId,
+                customerId: scannedCustomerId, // 店舗に顧客IDを返送
                 timestamp: new Date().toISOString()
             });
-            console.log("Payment status written to Firebase successfully.");
 
-            // 支払いリクエスト情報をFirebaseから削除 (一度きりの取引のため)
-            await window.database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
-            console.log("Payment request removed from Firebase.");
+            balance -= scannedPaymentAmount;
+            transactions.push({
+                type: 'payment',
+                amount: scannedPaymentAmount,
+                timestamp: new Date().toISOString(),
+                shopId: scannedShopId,
+                transactionId: scannedTransactionId
+            });
+
+            updateBalanceDisplay();
+            updateHistoryDisplay();
+            showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
+
+            // 支払いリクエストをFirebaseから削除
+            await database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
+            console.log("Payment request removed from Firebase after successful payment.");
+
+            // 支払い完了画面からメイン画面への自動遷移
+            setTimeout(() => {
+                showSection(mainPaymentSection);
+                // 支払い完了後の各種表示をリセット (任意)
+                readAmountDisplay.classList.add('hidden');
+                scannedAmountEl.classList.add('hidden');
+                confirmPayBtn.classList.add('hidden');
+            }, COMPLETION_DISPLAY_TIME);
 
         } catch (error) {
-            console.error("Firebaseへの書き込みエラー:", error);
-            alert("支払い情報の送信中にエラーが発生しました。");
-            return; // エラー時は処理を中断
-        }
-
-        showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
-
-        setTimeout(() => {
+            console.error("支払い処理中にエラーが発生しました:", error);
+            alert("支払処理中にエラーが発生しました。");
+            // エラー時もメイン画面に戻る
             showSection(mainPaymentSection);
-            scannedPaymentAmount = 0;
-            scannedShopId = '';
-            scannedTransactionId = '';
-            scannedCustomerId = '';
-            readAmountDisplay.classList.add('hidden');
-            confirmPayBtn.classList.add('hidden');
-        }, COMPLETION_DISPLAY_TIME);
-    };
-
-    // -------------------------------------------------------------------------
-    // チャージ機能
-    // -------------------------------------------------------------------------
-    const updatePredictedBalance = () => {
-        const chargeAmount = parseFloat(chargeAmountInput.value) || 0;
-        const currentDailyCharged = dailyCharges
-            .filter(c => new Date(c.timestamp).toDateString() === new Date().toDateString())
-            .reduce((sum, c) => sum + c.amount, 0);
-
-        const newBalance = balance + chargeAmount;
-        const totalChargedToday = currentDailyCharged + chargeAmount;
-
-        predictedBalanceEl.textContent = `¥ ${newBalance.toLocaleString()}`;
-
-        if (totalChargedToday > DAILY_CHARGE_LIMIT) {
-            predictedBalanceDisplay.style.color = 'red';
-            predictedBalanceEl.textContent = `¥ ${newBalance.toLocaleString()} (本日上限超過)`;
-            confirmChargeBtn.disabled = true;
-        } else if (newBalance > MAX_TOTAL_BALANCE) {
-            predictedBalanceDisplay.style.color = 'red';
-            predictedBalanceEl.textContent = `¥ ${newBalance.toLocaleString()} (総残高上限超過)`;
-            confirmChargeBtn.disabled = true;
-        }
-        else {
-            predictedBalanceDisplay.style.color = '';
-            confirmChargeBtn.disabled = false;
-        }
-
-        // チャージ金額が0以下、または無効な数値の場合はボタンを無効化
-        if (chargeAmount <= 0 || isNaN(chargeAmount)) {
-            confirmChargeBtn.disabled = true;
         }
     };
 
     const handleCharge = () => {
         const chargeAmount = parseFloat(chargeAmountInput.value);
+        const currentDailyCharge = dailyCharges.reduce((sum, charge) => sum + charge.amount, 0);
 
         if (isNaN(chargeAmount) || chargeAmount <= 0) {
-            alert('有効なチャージ金額を入力してください。');
+            alert('有効なチャージ金額を入力してください！');
             return;
         }
-
-        const currentDailyCharged = dailyCharges
-            .filter(c => new Date(c.timestamp).toDateString() === new Date().toDateString())
-            .reduce((sum, c) => sum + c.amount, 0);
-
-        const totalChargedToday = currentDailyCharged + chargeAmount;
-
-        if (totalChargedToday > DAILY_CHARGE_LIMIT) {
-            alert(`本日これ以上チャージできません。1日のチャージ上限は¥${DAILY_CHARGE_LIMIT.toLocaleString()}です。`);
+        if (currentDailyCharge + chargeAmount > DAILY_CHARGE_LIMIT) {
+            alert(`1日のチャージ上限額 (${DAILY_CHARGE_LIMIT.toLocaleString()}円) を超えます。`);
             return;
         }
         if (balance + chargeAmount > MAX_TOTAL_BALANCE) {
-            alert(`残高が上限を超えます。現在の総残高上限は¥${MAX_TOTAL_BALANCE.toLocaleString()}です。`);
+            alert(`残高が上限額 (${MAX_TOTAL_BALANCE.toLocaleString()}円) を超えます。`);
             return;
         }
-
 
         balance += chargeAmount;
         transactions.push({
@@ -382,15 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
             amount: chargeAmount,
             timestamp: new Date().toISOString()
         });
-
-        // デイリーチャージ履歴に追加
         dailyCharges.push({
             amount: chargeAmount,
             timestamp: new Date().toISOString()
         });
-        // その日のチャージだけを残す（念のため）
-        const today = new Date().toDateString();
-        dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
         localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
 
 
@@ -403,6 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
             chargeAmountInput.value = '1000'; // 初期値に戻す
             updatePredictedBalance();
         }, COMPLETION_DISPLAY_TIME);
+    };
+
+    const updatePredictedBalance = () => {
+        const chargeAmount = parseFloat(chargeAmountInput.value);
+        const predicted = balance + (isNaN(chargeAmount) ? 0 : chargeAmount);
+        predictedBalanceEl.textContent = predicted.toLocaleString();
     };
 
     // --- 初期化処理 ---
