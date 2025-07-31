@@ -529,8 +529,15 @@ input[type="text"] {
     align-items: center;
     font-size: 0.95em;
     transition: background-color 0.2s ease;
-    white-space: nowrap; /* 折り返しを防ぐために追加 */
+    /* white-space: nowrap; ここを削除し、必要に応じて折り返すようにします */
 }
+
+/* 履歴項目の最初のspan（金額や説明）を折り返さないようにする */
+#transactionHistory li > span:first-child,
+#shopTransactionHistory li > span:first-child {
+    white-space: nowrap;
+}
+
 
 #transactionHistory li:last-child, #shopTransactionHistory li:last-child {
     border-bottom: none;
@@ -572,4 +579,5 @@ input[type="text"] {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: normal;
+    /* white-space: normal; (デフォルト値なので明示的な指定は不要ですが、念のため) */
 }
