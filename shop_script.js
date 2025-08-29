@@ -197,10 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentExpectedTransactionId = null;
 
                 database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
-                    console.log("Payment status removed from Firebase after processing.");
+                    /**console.log("Payment status removed from Firebase after processing.");
                 }).catch(error => {
                     console.error("Error removing payment status from Firebase:", error);
-                });
+                });*/
             }
         }, (error) => {
             console.error("Firebaseリスナーエラー:", error);
@@ -252,3 +252,4 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
+
