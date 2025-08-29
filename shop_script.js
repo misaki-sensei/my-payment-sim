@@ -97,9 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
-        const dummyCustomerId = `USER-${Math.floor(Math.random() * 9000) + 1000}`;
-
-        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
+        // 修正箇所: customerId をQRデータから削除
+        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}`;
 
         if (qrCodeCanvas) {
             qrCodeCanvas.textContent = "";
@@ -130,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: amount,
                 shopId: SHOP_ID,
                 transactionId: currentExpectedTransactionId,
-                customerId: dummyCustomerId,
+                // 修正箇所: ここでもcustomerIdを削除
                 timestamp: new Date().toISOString()
             });
             console.log("Payment request written to Firebase successfully.");
