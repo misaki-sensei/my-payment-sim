@@ -196,11 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 paymentStatusListener = null;
                 currentExpectedTransactionId = null;
 
-                database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
-                    console.log("Payment status removed from Firebase after processing.");
-                }).catch(error => {
-                    console.error("Error removing payment status from Firebase:", error);
-                });
+                // 以下の行をコメントアウトすることで、支払い後の自動削除を無効にします
+                // database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
+                //     console.log("Payment status removed from Firebase after processing.");
+                // }).catch(error => {
+                //     console.error("Error removing payment status from Firebase:", error);
+                // });
             }
         }, (error) => {
             console.error("Firebaseリスナーエラー:", error);
@@ -252,5 +253,3 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
-
-
