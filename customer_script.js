@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedPaymentAmount = 0;
     let scannedShopId = '';
     let scannedTransactionId = '';
-    // ★追加: 顧客IDを保持するための変数
     let myCustomerId = '';
     let dailyCharges = []; // その日のチャージ履歴
 
@@ -112,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${dateStr} ${timeStr}`;
     };
 
-    // ★修正: 顧客IDのロードと生成を追加
     const loadAppData = () => {
         balance = parseFloat(localStorage.getItem(LOCAL_STORAGE_BALANCE_KEY)) || 0;
         transactions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_TRANSACTIONS_KEY)) || [];
@@ -125,7 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 顧客IDをロード。なければ新しく生成して保存
         myCustomerId = localStorage.getItem('customerMockPayPayId');
         if (!myCustomerId) {
-            myCustomerId = `CUST-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+            // ★修正: タイムスタンプを除き、4桁のランダムな数字を生成
+            const randomId = Math.floor(Math.random() * 9000) + 1000;
+            myCustomerId = `CUST-${randomId}`;
             localStorage.setItem('customerMockPayPayId', myCustomerId);
         }
     };
@@ -214,8 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scannedPaymentAmount = parseFloat(params.get('amount'));
         scannedShopId = params.get('shopId');
         scannedTransactionId = params.get('transactionId');
-        // ★修正: 店舗が送信するcustomerIdは無視する
-        // scannedCustomerId = params.get('customerId');
 
         if (isNaN(scannedPaymentAmount) || scannedPaymentAmount <= 0 || !scannedShopId || !scannedTransactionId) {
             alert('無効なQRコードです。');
@@ -241,17 +239,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ★変更: 「QRコードを読み取りました」メッセージの表示 (setTimeoutを削除)
             readAmountDisplay.textContent = `QRコードを読み取りました: ¥ ${scannedPaymentAmount.toLocaleString()}`;
-            readAmountDisplay.classList.remove('hidden'); // 表示する
+            readAmountDisplay.classList.remove('hidden');
 
-            // scannedAmountEl と confirmPayBtn は永続的に表示される
-            scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`; // 金額を明確に表示
-            scannedAmountEl.classList.remove('hidden'); // 金額はそのまま表示
+            scannedAmountEl.textContent = `¥ ${scannedPaymentAmount.toLocaleString()}`;
+            scannedAmountEl.classList.remove('hidden');
 
-            confirmPayBtn.classList.remove('hidden'); // 支払いボタンを表示
-            // QRリーダーセクションに留まる（支払い確認画面として利用）
-            // showSection(qrReaderSection); // この行はコメントアウトまたは削除し、QRリーダーセクションに表示を継続
+            confirmPayBtn.classList.remove('hidden');
         } catch (error) {
             console.error("Firebaseからの支払いリクエスト取得エラー:", error);
             alert("支払いリクエストの確認中にエラーが発生しました。");
@@ -265,14 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Firebaseに支払い完了ステータスを送信
         try {
             await database.ref(PAYMENT_STATUS_DB_PATH + scannedTransactionId).set({
                 status: 'success',
                 amount: scannedPaymentAmount,
                 shopId: scannedShopId,
                 transactionId: scannedTransactionId,
-                customerId: myCustomerId, // ★修正: 端末に保存した固有のIDを送信する
+                customerId: myCustomerId,
                 timestamp: new Date().toISOString()
             });
 
@@ -289,14 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
             updateHistoryDisplay();
             showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
 
-            // 支払いリクエストをFirebaseから削除
             await database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
             console.log("Payment request removed from Firebase after successful payment.");
             
         } catch (error) {
             console.error("支払い処理中にエラーが発生しました:", error);
             alert("支払処理中にエラーが発生しました。");
-            // エラー時もメイン画面に戻る
             showSection(mainPaymentSection);
         }
     };
