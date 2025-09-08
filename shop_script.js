@@ -201,11 +201,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 paymentStatusListener = null;
                 // currentExpectedTransactionId は次のQR生成で更新されるのでここではnullにしない
 
-                database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
-                    console.log("Payment status removed from Firebase after processing.");
-                }).catch(error => {
-                    console.error("Error removing payment status from Firebase:", error);
-                });
+                // ★修正: 支払いステータスと支払いリクエストを削除しない
+                // database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
+                //     console.log("Payment status removed from Firebase after processing.");
+                // }).catch(error => {
+                //     console.error("Error removing payment status from Firebase:", error);
+                // });
             }
         }, (error) => {
             console.error("Firebaseリスナーエラー:", error);
