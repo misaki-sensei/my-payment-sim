@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // QRコードリーダーのロジック
     // -------------------------------------------------------------------------
     const startQrReader = async () => {
+        cameraStatus.classList.remove('hidden');
         cameraStatus.textContent = 'カメラを起動中...';
         readAmountDisplay.classList.add('hidden'); // 以前の表示を隠す
         confirmPayBtn.classList.add('hidden'); // 以前のボタンを隠す
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrCodeSuccessCallback = async (qrData) => {
         console.log("QR Code detected:", qrData);
         // カメラの状態メッセージをクリア
+        cameraStatus.classList.add('hidden');
         cameraStatus.textContent = '';
         // QRコード読み取り後、カメラの映像を非表示にする
         qrCameraVideo.style.display = 'none';
@@ -377,3 +379,4 @@ document.addEventListener('DOMContentLoaded', () => {
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
 });
+
