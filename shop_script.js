@@ -1,4 +1,4 @@
-// shop_script.js (Firebase連携版 - 更新済み)
+// shop_script.js (Firebase連携版 - 最終版)
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM要素の取得 ---
     const mainShopSection = document.getElementById('mainShopSection');
@@ -87,14 +87,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const generateAndDisplayQrCode = async () => {
-        // ★修正点1: 金額を固定値にする★
         const amount = parseFloat(paymentAmountInput.value);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert('有効な金額を入力してください。');
+            showSection(mainShopSection);
+            return;
+        }
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
-        const dummyCustomerId = `USER-${Math.floor(Math.random() * 9000) + 1000}`;
-
-        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
+        // ★修正: 顧客IDを含めない
+        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}`;
 
         if (qrCodeCanvas) {
             qrCodeCanvas.textContent = "";
@@ -125,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: amount,
                 shopId: SHOP_ID,
                 transactionId: currentExpectedTransactionId,
-                customerId: dummyCustomerId,
+                // ★修正: 顧客IDを含めない
                 timestamp: new Date().toISOString()
             });
             console.log("Payment request written to Firebase successfully.");
@@ -146,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             showSection(qrDisplaySection);
-            // ★修正点2: 支払い完了後にQRコードを自動更新する★
+            // 支払い完了後にQRコードを自動更新する
             generateAndDisplayQrCode();
         }, COMPLETION_DISPLAY_TIME);
     };
@@ -249,4 +253,3 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
-
