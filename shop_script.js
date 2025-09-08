@@ -67,11 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 取引IDの末尾4桁を表示
             const shortTransactionId = transaction.transactionId ? transaction.transactionId.substring(transaction.transactionId.length - 4) : '';
+            // ★修正: 顧客IDも末尾4桁に短縮して表示
+            const shortCustomerId = transaction.customerId ? transaction.customerId.substring(transaction.customerId.length - 4) : '不明';
+
 
             // ★変更箇所：入金完了と金額を1行で表示するように結合★
             listItem.innerHTML = `
                 <span>入金完了 ¥ ${transaction.amount.toLocaleString()}</span>
-                <span class="history-date">${dateStr} ${timeStr} (${transaction.customerId || '不明な顧客'}) [${shortTransactionId}]</span>
+                <span class="history-date">${dateStr} ${timeStr} (顧客: ${shortCustomerId}) [${shortTransactionId}]</span>
             `;
             shopTransactionHistoryEl.appendChild(listItem);
         }
@@ -145,7 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showPaymentReceivedCompletionSection = (paymentData) => {
         receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`;
-        receivedCustomerInfoNewEl.textContent = `顧客ID: ${paymentData.customerId || '不明'} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
+        // ★修正: 顧客IDを末尾4桁に短縮して表示
+        const shortCustomerId = paymentData.customerId ? paymentData.customerId.substring(paymentData.customerId.length - 4) : '不明';
+        receivedCustomerInfoNewEl.textContent = `顧客ID: ${shortCustomerId} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
         showSection(paymentReceivedSection);
 
         setTimeout(() => {
