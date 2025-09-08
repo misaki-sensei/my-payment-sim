@@ -1,4 +1,4 @@
-// shop_script.js (Firebase連携版 - 更新済み)
+// shop_script.js (Firebase連携版 - 最終版)
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM要素の取得 ---
     const mainShopSection = document.getElementById('mainShopSection');
@@ -87,8 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const generateAndDisplayQrCode = async () => {
-        // ★修正点1: 金額を固定値にする★
-        const amount = 1000; // 例として1000円に固定
+        // ★修正点: ここで入力値を取得するように戻しました★
+        const amount = parseFloat(paymentAmountInput.value);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert('有効な金額を入力してください。');
+            showSection(mainShopSection);
+            return;
+        }
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
@@ -146,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             showSection(qrDisplaySection);
-            // ★修正点2: 支払い完了後にQRコードを自動更新する★
+            // 支払い完了後にQRコードを自動更新する
             generateAndDisplayQrCode();
         }, COMPLETION_DISPLAY_TIME);
     };
@@ -231,21 +237,4 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await database.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).remove();
                 console.log("Current payment request removed from Firebase.");
-            } catch (error) {
-                console.error("Error removing payment request from Firebase:", error);
-            }
-            try {
-                await database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).remove();
-                console.log("Current payment request removed from Firebase.");
-            } catch (error) {
-                console.error("Error removing payment status from Firebase:", error);
-            }
-        }
-        currentExpectedTransactionId = null;
-    });
-
-    backToMainFromShopCompletionBtn.addEventListener('click', () => {
-        showSection(mainShopSection);
-        paymentAmountInput.value = '0';
-    });
-});
+            } catch
