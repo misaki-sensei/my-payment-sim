@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 定数 ---
-    const SHOP_ID = 'YanaharaSHOP001';
+    const SHOP_ID = 'MOCKSHOP001';
     const LOCAL_STORAGE_SHOP_HISTORY_KEY = 'shopMockPayPayHistory';
     const COMPLETION_DISPLAY_TIME = 3000;
 
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateStr = date.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
             const timeStr = date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
-            // 取引IDの末尾4桁を表示
+            // ★修正: 取引IDの末尾4桁を表示
             const shortTransactionId = transaction.transactionId ? transaction.transactionId.substring(transaction.transactionId.length - 4) : '';
             // ★修正: 顧客IDも末尾4桁に短縮して表示
             const shortCustomerId = transaction.customerId ? transaction.customerId.substring(transaction.customerId.length - 4) : '不明';
@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         receivedAmountEl.textContent = `¥ ${paymentData.amount.toLocaleString()}`;
         // ★修正: 顧客IDを末尾4桁に短縮して表示
         const shortCustomerId = paymentData.customerId ? paymentData.customerId.substring(paymentData.customerId.length - 4) : '不明';
+        // ★修正: 取引IDを末尾4桁に短縮して表示
         receivedCustomerInfoNewEl.textContent = `顧客ID: ${shortCustomerId} (取引ID: ${paymentData.transactionId.substring(paymentData.transactionId.length - 4)})`;
         showSection(paymentReceivedSection);
 
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Payment received from Firebase:", statusData);
                 paymentStatusText.innerHTML = `<span class="icon">✅</span> ¥ ${statusData.amount.toLocaleString()} が入金されました！`;
                 paymentStatusText.className = 'status-success';
+                // ★修正: 取引IDを末尾4桁に短縮して表示
                 receivedPaymentInfoEl.textContent = `取引ID: ${statusData.transactionId.substring(statusData.transactionId.length - 4)} (顧客: ${statusData.customerId || '不明'})`;
                 receivedPaymentInfoEl.classList.remove('hidden');
 
@@ -259,4 +261,3 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
-
