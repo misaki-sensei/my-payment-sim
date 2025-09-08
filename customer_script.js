@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const COMPLETION_DISPLAY_TIME = 3000; // 完了メッセージ表示時間
 
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
-    const DAILY_CHARGE_LIMIT = 1000000; // 100万円
+    const DAILY_CHARGE_LIMIT = 100000; // 10万円
     const MAX_TOTAL_BALANCE = 100000000; // 1億円
 
     // Firebase Realtime Databaseのパス (店舗側と顧客側で共通)
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         myCustomerId = localStorage.getItem('customerMockPayPayId');
         if (!myCustomerId) {
             // タイムスタンプを除き、4桁のランダムな数字を生成
-            const randomId = Math.floor(Math.random() * 9000) + 1000;
+            const randomId = Math.floor(Math.random() * 900000) + 100000;
             myCustomerId = `CUST-${randomId}`;
             localStorage.setItem('customerMockPayPayId', myCustomerId);
         }
@@ -379,4 +379,5 @@ document.addEventListener('DOMContentLoaded', () => {
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
 });
+
 
