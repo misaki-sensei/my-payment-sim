@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 顧客IDをロード。なければ新しく生成して保存
         myCustomerId = localStorage.getItem('customerMockPayPayId');
         if (!myCustomerId) {
-            // タイムスタンプを除き、4桁のランダムな数字を生成
+            // 6桁のランダムな数字を生成
             const randomId = Math.floor(Math.random() * 900000) + 100000;
             myCustomerId = `CUST-${randomId}`;
             localStorage.setItem('customerMockPayPayId', myCustomerId);
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qrCameraVideo.srcObject = videoStream;
             qrCameraVideo.play();
             cameraStatus.innerHTML = '<span class="icon">⏳</span> QRコードを読み取り中...';
-            // ★追加: テキストの位置を調整
+            // テキストの位置を調整
             cameraStatus.style.textAlign = 'center';
             cameraStatus.style.position = 'relative';
             cameraStatus.style.top = '-20px';
@@ -294,6 +294,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
             stopQrReader(); // 支払い完了時にQRリーダーを停止
 
+            // ★修正: 支払い完了後に3秒でメイン画面に戻る
+            setTimeout(() => {
+                showSection(mainPaymentSection);
+            }, 3000);
+
             await database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
             console.log("Payment request removed from Firebase after successful payment.");
             
@@ -379,5 +384,3 @@ document.addEventListener('DOMContentLoaded', () => {
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
 });
-
-
