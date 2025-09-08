@@ -160,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
         readAmountDisplay.classList.add('hidden'); // 以前の表示を隠す
         confirmPayBtn.classList.add('hidden'); // 以前のボタンを隠す
         scannedAmountEl.textContent = ''; // 以前の金額表示をクリア
+        // QRリーダーセクションを表示する際に、カメラを再表示する
+        qrCameraVideo.style.display = 'block';
 
         try {
             videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -207,8 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const qrCodeSuccessCallback = async (qrData) => {
         console.log("QR Code detected:", qrData);
-        // ★修正点: QR読み取り完了時にカメラの状態メッセージをクリア
-        cameraStatus.textContent = ''; 
+        // カメラの状態メッセージをクリア
+        cameraStatus.textContent = '';
+        // ★修正点: QRコード読み取り後、カメラの映像を非表示にする
+        qrCameraVideo.style.display = 'none';
 
         // QRデータからパラメータをパース
         const params = new URLSearchParams(qrData);
