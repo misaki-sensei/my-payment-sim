@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedPaymentAmount = 0;
     let scannedShopId = '';
     let scannedTransactionId = '';
-    let scannedCustomerId = '';
+    // ★追加: 顧客IDを保持するための変数
+    let myCustomerId = '';
     let dailyCharges = []; // その日のチャージ履歴
 
     let videoStream = null;
@@ -111,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${dateStr} ${timeStr}`;
     };
 
+    // ★修正: 顧客IDのロードと生成を追加
     const loadAppData = () => {
         balance = parseFloat(localStorage.getItem(LOCAL_STORAGE_BALANCE_KEY)) || 0;
         transactions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_TRANSACTIONS_KEY)) || [];
@@ -119,6 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date().toDateString();
         dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
         localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
+        
+        // 顧客IDをロード。なければ新しく生成して保存
+        myCustomerId = localStorage.getItem('customerMockPayPayId');
+        if (!myCustomerId) {
+            myCustomerId = `CUST-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+            localStorage.setItem('customerMockPayPayId', myCustomerId);
+        }
     };
 
     const showSection = (sectionToShow) => {
@@ -205,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
         scannedPaymentAmount = parseFloat(params.get('amount'));
         scannedShopId = params.get('shopId');
         scannedTransactionId = params.get('transactionId');
-        scannedCustomerId = params.get('customerId'); // 店舗から送られた顧客IDを保持
+        // ★修正: 店舗が送信するcustomerIdは無視する
+        // scannedCustomerId = params.get('customerId');
 
         if (isNaN(scannedPaymentAmount) || scannedPaymentAmount <= 0 || !scannedShopId || !scannedTransactionId) {
             alert('無効なQRコードです。');
@@ -262,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: scannedPaymentAmount,
                 shopId: scannedShopId,
                 transactionId: scannedTransactionId,
-                customerId: scannedCustomerId, // 店舗に顧客IDを返送
+                customerId: myCustomerId, // ★修正: 端末に保存した固有のIDを送信する
                 timestamp: new Date().toISOString()
             });
 
