@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             qrCameraVideo.srcObject = videoStream;
             qrCameraVideo.play();
-            cameraStatus.textContent = 'QRコードを読み取り中...';
+            cameraStatus.innerHTML = '<span class="icon">⏳</span> QRコードを読み取り中...';
 
             qrScanInterval = setInterval(() => {
                 const context = qrCanvas.getContext('2d');
@@ -207,7 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const qrCodeSuccessCallback = async (qrData) => {
         console.log("QR Code detected:", qrData);
-        cameraStatus.textContent = ''; // カメラの状態メッセージをクリア
+        // ★修正点: QR読み取り完了時にカメラの状態メッセージをクリア
+        cameraStatus.textContent = ''; 
 
         // QRデータからパラメータをパース
         const params = new URLSearchParams(qrData);
