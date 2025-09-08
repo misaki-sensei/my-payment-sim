@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const generateAndDisplayQrCode = async () => {
         // ★修正点1: 金額を固定値にする★
-        const amount = 1000; // 例として1000円に固定
+        const amount = parseFloat(paymentAmountInput.value);
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
@@ -249,3 +249,4 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
+
