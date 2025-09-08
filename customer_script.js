@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToMainFromCompletionBtn = document.getElementById('backToMainFromCompletionBtn');
 
     const chargeCompletionSection = document.getElementById('chargeCompletionSection');
-    const chargedAmountEl = document.getElementById('chargedAmount');
+    const chargedAmountEl = document = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
 
@@ -168,6 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
             qrCameraVideo.srcObject = videoStream;
             qrCameraVideo.play();
             cameraStatus.innerHTML = '<span class="icon">⏳</span> QRコードを読み取り中...';
+            // ★追加: テキストの位置を調整
+            cameraStatus.style.textAlign = 'center';
+            cameraStatus.style.position = 'relative';
+            cameraStatus.style.top = '-20px';
 
             qrScanInterval = setInterval(() => {
                 const context = qrCanvas.getContext('2d');
@@ -211,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("QR Code detected:", qrData);
         // カメラの状態メッセージをクリア
         cameraStatus.textContent = '';
-        // ★修正点: QRコード読み取り後、カメラの映像を非表示にする
+        // QRコード読み取り後、カメラの映像を非表示にする
         qrCameraVideo.style.display = 'none';
 
         // QRデータからパラメータをパース
