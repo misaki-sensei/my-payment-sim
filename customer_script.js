@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 顧客IDをロード。なければ新しく生成して保存
         myCustomerId = localStorage.getItem('customerMockPayPayId');
         if (!myCustomerId) {
-            // ★修正: タイムスタンプを除き、4桁のランダムな数字を生成
+            // タイムスタンプを除き、4桁のランダムな数字を生成
             const randomId = Math.floor(Math.random() * 9000) + 1000;
             myCustomerId = `CUST-${randomId}`;
             localStorage.setItem('customerMockPayPayId', myCustomerId);
@@ -281,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBalanceDisplay();
             updateHistoryDisplay();
             showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
+            stopQrReader(); // 支払い完了時にQRリーダーを停止
 
             await database.ref(PAYMENT_REQUEST_DB_PATH + scannedTransactionId).remove();
             console.log("Payment request removed from Firebase after successful payment.");
