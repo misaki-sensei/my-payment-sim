@@ -87,18 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const generateAndDisplayQrCode = async () => {
-        const amount = parseFloat(paymentAmountInput.value);
-
-        if (isNaN(amount) || amount <= 0) {
-            alert('有効な金額を入力してください！');
-            showSection(mainShopSection);
-            return;
-        }
+        // ★修正点1: 金額を固定値にする★
+        const amount = 1000; // 例として1000円に固定
 
         currentExpectedTransactionId = generateUniqueTransactionId();
 
-        // 修正箇所: customerId をQRデータから削除
-        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}`;
+        const dummyCustomerId = `USER-${Math.floor(Math.random() * 9000) + 1000}`;
+
+        const qrData = `amount=${amount}&shopId=${SHOP_ID}&transactionId=${currentExpectedTransactionId}&customerId=${dummyCustomerId}`;
 
         if (qrCodeCanvas) {
             qrCodeCanvas.textContent = "";
@@ -129,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: amount,
                 shopId: SHOP_ID,
                 transactionId: currentExpectedTransactionId,
-                // 修正箇所: ここでもcustomerIdを削除
+                customerId: dummyCustomerId,
                 timestamp: new Date().toISOString()
             });
             console.log("Payment request written to Firebase successfully.");
@@ -149,8 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(paymentReceivedSection);
 
         setTimeout(() => {
-            showSection(mainShopSection);
-            paymentAmountInput.value = '0';
+            showSection(qrDisplaySection);
+            // ★修正点2: 支払い完了後にQRコードを自動更新する★
+            generateAndDisplayQrCode();
         }, COMPLETION_DISPLAY_TIME);
     };
 
@@ -193,14 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 database.ref(PAYMENT_STATUS_DB_PATH + currentExpectedTransactionId).off('value', paymentStatusListener);
                 paymentStatusListener = null;
-                currentExpectedTransactionId = null;
+                // currentExpectedTransactionId は次のQR生成で更新されるのでここではnullにしない
 
-                // 以下の行をコメントアウトすることで、支払い後の自動削除を無効にします
-                // database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
-                //     console.log("Payment status removed from Firebase after processing.");
-                // }).catch(error => {
-                //     console.error("Error removing payment status from Firebase:", error);
-                // });
+                database.ref(PAYMENT_STATUS_DB_PATH + statusData.transactionId).remove().then(() => {
+                    console.log("Payment status removed from Firebase after processing.");
+                }).catch(error => {
+                    console.error("Error removing payment status from Firebase:", error);
+                });
             }
         }, (error) => {
             console.error("Firebaseリスナーエラー:", error);
@@ -231,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentExpectedTransactionId) {
+            // QRコードを更新せずにメイン画面に戻る場合、支払いリクエストを削除する
             try {
                 await database.ref(PAYMENT_REQUEST_DB_PATH + currentExpectedTransactionId).remove();
                 console.log("Current payment request removed from Firebase.");
