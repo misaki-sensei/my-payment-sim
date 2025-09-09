@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 定数 ---
-    const SHOP_ID = 'MOCKSHOP001';
+    const SHOP_ID = 'YanaharaSHOP001';
     const LOCAL_STORAGE_SHOP_HISTORY_KEY = 'shopMockPayPayHistory';
     const COMPLETION_DISPLAY_TIME = 3000;
 
@@ -261,3 +261,4 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
 });
+
