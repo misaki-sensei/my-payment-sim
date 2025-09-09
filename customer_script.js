@@ -351,12 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updatePredictedBalance = () => {
-        let chargeAmount = parseFloat(chargeAmountInput.value);
-        // ★修正: 入力値が1億円を超える場合、1億円に制限する
-        if (chargeAmount > MAX_TOTAL_BALANCE) {
-            chargeAmountInput.value = MAX_TOTAL_BALANCE;
-            chargeAmount = MAX_TOTAL_BALANCE;
-        }
+        const chargeAmount = parseFloat(chargeAmountInput.value);
         const predicted = balance + (isNaN(chargeAmount) ? 0 : chargeAmount);
         predictedBalanceEl.textContent = predicted.toLocaleString();
     };
