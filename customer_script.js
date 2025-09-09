@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showPaymentCompletionSection(scannedPaymentAmount, scannedShopId);
             stopQrReader(); // 支払い完了時にQRリーダーを停止
 
-            // ★修正: 支払い完了後に3秒でメイン画面に戻る
+            // ★追加: 支払い完了後に3秒でメイン画面に戻る
             setTimeout(() => {
                 showSection(mainPaymentSection);
             }, 3000);
@@ -310,77 +310,4 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleCharge = () => {
-        const chargeAmount = parseFloat(chargeAmountInput.value);
-        const currentDailyCharge = dailyCharges.reduce((sum, charge) => sum + charge.amount, 0);
-
-        if (isNaN(chargeAmount) || chargeAmount <= 0) {
-            alert('有効なチャージ金額を入力してください！');
-            return;
-        }
-        if (currentDailyCharge + chargeAmount > DAILY_CHARGE_LIMIT) {
-            alert(`1日のチャージ上限額 (${DAILY_CHARGE_LIMIT.toLocaleString()}円) を超えます。`);
-            return;
-        }
-        if (balance + chargeAmount > MAX_TOTAL_BALANCE) {
-            alert(`残高が上限額 (${MAX_TOTAL_BALANCE.toLocaleString()}円) を超えます。`);
-            return;
-        }
-
-        balance += chargeAmount;
-        transactions.push({
-            type: 'charge',
-            amount: chargeAmount,
-            timestamp: new Date().toISOString()
-        });
-        dailyCharges.push({
-            amount: chargeAmount,
-            timestamp: new Date().toISOString()
-        });
-        localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
-
-
-        updateBalanceDisplay();
-        updateHistoryDisplay();
-        showChargeCompletionSection(chargeAmount);
-
-        setTimeout(() => {
-            showSection(mainPaymentSection);
-            chargeAmountInput.value = '1000'; // 初期値に戻す
-            updatePredictedBalance();
-        }, COMPLETION_DISPLAY_TIME);
-    };
-
-    const updatePredictedBalance = () => {
-        const chargeAmount = parseFloat(chargeAmountInput.value);
-        const predicted = balance + (isNaN(chargeAmount) ? 0 : chargeAmount);
-        predictedBalanceEl.textContent = predicted.toLocaleString();
-    };
-
-    // --- 初期化処理 ---
-    loadAppData();
-    updateBalanceDisplay();
-    updateHistoryDisplay();
-    showSection(mainPaymentSection);
-    updatePredictedBalance(); // 初期表示時にチャージ予測金額を更新
-
-    // --- イベントリスナー ---
-    showQrReaderBtn.addEventListener('click', () => {
-        showSection(qrReaderSection);
-        startQrReader();
-    });
-
-    cancelQrReadBtn.addEventListener('click', () => {
-        stopQrReader();
-        showSection(mainPaymentSection);
-    });
-
-    confirmPayBtn.addEventListener('click', handlePayment);
-
-    showChargeBtn.addEventListener('click', () => showSection(chargeSection));
-    cancelChargeBtn.addEventListener('click', () => showSection(mainPaymentSection));
-    chargeAmountInput.addEventListener('input', updatePredictedBalance); // 入力があるたびに予測残高を更新
-    confirmChargeBtn.addEventListener('click', handleCharge);
-
-    backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
-    backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
-});
+        const chargeAmount = parseFloat(chargeAmount
