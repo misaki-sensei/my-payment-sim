@@ -45,12 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 定数 ---
-    // ★キー名を変更
+    // ★ accounting用のキー
     const LOCAL_STORAGE_BALANCE_KEY = 'accountingMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'accountingMockPayPayTransactions';
-    const COMPLETION_DISPLAY_TIME = 3000;
-
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'accountingMockPayPayDailyCharges';
+    const LOCAL_STORAGE_ID_KEY = 'accountingMockPayPayId'; // ★ ID用のキーも定義
+
+    const COMPLETION_DISPLAY_TIME = 3000;
     const DAILY_CHARGE_LIMIT = 100000;
     const MAX_TOTAL_BALANCE = 100000000;
 
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedPaymentAmount = 0;
     let scannedShopId = '';
     let scannedTransactionId = '';
-    let myCustomerId = ''; // IDを保存するキーも変更
+    let myCustomerId = '';
     let dailyCharges = [];
 
     let videoStream = null;
@@ -126,12 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
         localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
         
-        // ★IDのキー名も変更
-        myCustomerId = localStorage.getItem('accountingMockPayPayId');
+        myCustomerId = localStorage.getItem(LOCAL_STORAGE_ID_KEY);
         if (!myCustomerId) {
             const randomId = Math.floor(Math.random() * 900000) + 100000;
             myCustomerId = `CUST-${randomId}`;
-            localStorage.setItem('accountingMockPayPayId', myCustomerId);
+            localStorage.setItem(LOCAL_STORAGE_ID_KEY, myCustomerId);
         }
     };
 
