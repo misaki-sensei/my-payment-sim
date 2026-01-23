@@ -101,6 +101,16 @@
             <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
         </div>
 
+        <div id="remittanceCompletionSection" class="section hidden">
+            <div class="completion-card card">
+                <div class="completion-icon" style="background-color: #ff9800; color: white; display: flex; justify-content: center; align-items: center; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px; font-size: 40px;" role="img" aria-label="送金完了">💸</div>
+                <p class="completion-message">送金が完了しました！</p>
+                <p id="sentAmountDisplay" class="completed-amount" style="font-size: 2.5em; font-weight: bold; color: #333; margin: 10px 0;">¥ 0</p>
+                <p id="sentToUserDisplay" style="color: #666; font-size: 14px; margin-bottom: 20px;"></p>
+                <p style="color: #888; font-size: 12px; margin-bottom: 15px;">3秒後に自動的にメイン画面に戻ります</p>
+            </div>
+            <button id="backToMainFromRemittanceBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+        </div>
         <div class="history-section card">
             <h2 class="section-title">支払い完了履歴</h2>
             <ul id="shopTransactionHistory"></ul>
