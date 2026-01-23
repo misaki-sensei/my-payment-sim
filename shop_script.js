@@ -53,15 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ★修正箇所：日時を秒まで含めたフル形式にする
     function saveAndRender(type, amount, userId) {
-        const timeStr = new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
         const newTx = { type, amount, userId, time: timeStr };
         transactions.push(newTx);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
         renderHistoryItem(newTx);
     }
 
-    // ★修正箇所：時間を一番右に配置するレイアウト
+    // ★修正箇所：日時を一番右に配置するレイアウト
     function renderHistoryItem(t) {
         const li = document.createElement('li');
         li.style.padding = "12px"; 
@@ -73,11 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         li.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items: center;">
-                <div style="flex: 1;">
+                <div style="flex: 1; min-width: 0;">
                     <strong style="color:${color}">${label}: ¥${Math.abs(parseInt(t.amount)).toLocaleString()}</strong>
                     <div style="font-size:0.8em; color:#666; margin-top: 4px;">ID: ${t.userId}</div>
                 </div>
-                <div style="font-size:0.8em; color:#888; white-space: nowrap; margin-left: 10px;">
+                <div style="font-size:0.75em; color:#888; white-space: nowrap; margin-left: 10px; text-align: right;">
                     ${t.time}
                 </div>
             </div>
