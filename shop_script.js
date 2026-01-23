@@ -34,22 +34,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 定数・変数 ---
     const SHOP_ID = 'YanaharaSHOP001';
-    const AUTO_DELAY = 2000; // すべて2秒に統一
-    const STORAGE_KEY = 'shop_history_data'; // LocalStorage保存用キー
+    const AUTO_DELAY = 2000;
+    const STORAGE_KEY = 'shop_history_data';
 
     let currentExpectedTransactionId = null;
     let paymentStatusListener = null;
     let shopVideoObj = null;
     let targetUserId = null;
     let autoTimer = null;
-    let transactions = []; // 履歴データ
+    let transactions = [];
 
-    // --- 関数: 履歴の保存と描画 (LocalStorage対応) ---
+    // --- 履歴保存・LocalStorage ---
     function loadHistory() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             transactions = JSON.parse(saved);
-            // 保存されている履歴を古い順から新しい順に描画
             transactions.forEach(t => renderHistoryItem(t));
         }
     }
@@ -57,26 +56,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveAndRender(type, amount, userId) {
         const timeStr = new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'});
         const newTx = { type, amount, userId, time: timeStr };
-        
-        // データを保存
         transactions.push(newTx);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-        
-        // 画面に描画
         renderHistoryItem(newTx);
     }
 
     function renderHistoryItem(t) {
         const li = document.createElement('li');
-        li.style.padding = "12px";
-        li.style.borderBottom = "1px solid #eee";
-        li.style.listStyle = "none";
-        li.style.display = "flex";
-        li.style.flexDirection = "column";
-
+        li.style.padding = "12px"; li.style.borderBottom = "1px solid #eee"; li.style.listStyle = "none";
+        li.style.display = "flex"; li.style.flexDirection = "column";
         const color = t.type === 'income' ? '#28a745' : '#dc3545';
         const label = t.type === 'income' ? '💰 入金' : '💸 送金';
-
         li.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <strong style="color: ${color}; font-size: 1.1em;">${label}: ¥${parseInt(t.amount).toLocaleString()}</strong>
@@ -89,93 +79,67 @@ document.addEventListener('DOMContentLoaded', () => {
         shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
     }
 
-    // --- 関数: 画面切り替え ---
     function showSection(section) {
         if (autoTimer) clearTimeout(autoTimer);
-        const allSections = [
-            mainShopSection, qrDisplaySection, shopScannerSection, 
-            remittanceAmountSection, paymentReceivedSection, remittanceCompSection
-        ];
+        const allSections = [mainShopSection, qrDisplaySection, shopScannerSection, remittanceAmountSection, paymentReceivedSection, remittanceCompSection];
         allSections.forEach(sec => { if (sec) sec.classList.add('hidden'); });
         if (section) section.classList.remove('hidden');
     }
 
-    // --- 支払い処理 (入金) ---
+    // --- 支払い受付処理 ---
     function startPayment(amount) {
         currentExpectedTransactionId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const qrData = JSON.stringify({ shopId: SHOP_ID, amount: amount, transactionId: currentExpectedTransactionId });
 
+        // GASが paymentStatuses を監視しているため、ここにリクエストを作成
         database.ref('payment_requests/' + currentExpectedTransactionId).set({
-            shopId: SHOP_ID, amount: amount, status: 'pending', timestamp: firebase.database.ServerValue.TIMESTAMP
+            shopId: SHOP_ID, amount: amount, status: 'pending', timestamp: new Date().toISOString()
         });
 
         showSection(qrDisplaySection);
         qrCodeCanvas.innerHTML = '';
         new QRCode(qrCodeCanvas, { text: qrData, width: 200, height: 200 });
         
-        if(paymentStatusText) {
-            paymentStatusText.innerHTML = '⏳ 顧客からの支払い待ち...';
-            paymentStatusText.className = 'status-pending';
-        }
-
-        if (paymentStatusListener) database.ref('payment_status/' + currentExpectedTransactionId).off();
-        paymentStatusListener = database.ref('payment_status/' + currentExpectedTransactionId).on('value', (snapshot) => {
-            const statusData = snapshot.val();
-            if (statusData && statusData.status === 'completed') {
-                handlePaymentCompleted(statusData.userId, amount);
+        // 監視パスの修正: GASが消去する可能性があるため、お客側の書き込み先と合わせます
+        if (paymentStatusListener) database.ref('paymentStatuses').off();
+        paymentStatusListener = database.ref('paymentStatuses').on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            // 自分の発行した金額と一致するか確認（簡易照合）
+            if (data && data.shopId === SHOP_ID && parseInt(data.amount) === parseInt(amount)) {
+                handlePaymentCompleted(data.customerId || 'Unknown', amount);
             }
         });
     }
 
     function handlePaymentCompleted(userId, amount) {
-        database.ref('payment_status/' + currentExpectedTransactionId).off();
-        
-        // 履歴保存＆描画
+        if (paymentStatusListener) database.ref('paymentStatuses').off();
         saveAndRender('income', amount, userId);
-
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
         showSection(paymentReceivedSection);
-
-        // 2秒後に連続支払い用QRを再生成
-        autoTimer = setTimeout(() => {
-            if (!paymentReceivedSection.classList.contains('hidden')) startPayment(amount);
-        }, AUTO_DELAY);
+        autoTimer = setTimeout(() => { if (!paymentReceivedSection.classList.contains('hidden')) startPayment(amount); }, AUTO_DELAY);
     }
 
-    // --- 送金処理 (出金) ---
+    // --- 送金カメラ処理 ---
     function startShopQrReader() {
         showSection(shopScannerSection);
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(function(stream) {
-                shopVideoObj = stream;
-                shopCameraVideo.srcObject = stream;
-                shopCameraVideo.play();
-                requestAnimationFrame(tickShopQr);
-            })
-            .catch(function(err) {
-                alert("カメラを起動できませんでした");
-                showSection(mainShopSection);
-            });
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+            shopVideoObj = stream; shopCameraVideo.srcObject = stream; shopCameraVideo.play(); requestAnimationFrame(tickShopQr);
+        }).catch(function(err) { alert("カメラ起動失敗"); showSection(mainShopSection); });
     }
 
     function tickShopQr() {
         if (shopCameraVideo.readyState === shopCameraVideo.HAVE_ENOUGH_DATA) {
-            shopQrCanvas.height = shopCameraVideo.videoHeight;
-            shopQrCanvas.width = shopCameraVideo.videoWidth;
-            const ctx = shopQrCanvas.getContext("2d");
-            ctx.drawImage(shopCameraVideo, 0, 0, shopQrCanvas.width, shopQrCanvas.height);
-            const imageData = ctx.getImageData(0, 0, shopQrCanvas.width, shopQrCanvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            shopQrCanvas.height = shopCameraVideo.videoHeight; shopQrCanvas.width = shopCameraVideo.videoWidth;
+            const ctx = shopQrCanvas.getContext("2d"); ctx.drawImage(shopCameraVideo, 0, 0, shopQrCanvas.width, shopQrCanvas.height);
+            const code = jsQR(ctx.getImageData(0, 0, shopQrCanvas.width, shopQrCanvas.height).data, shopQrCanvas.width, shopQrCanvas.height);
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
                     if (data.type === 'receive_money' && data.userId) {
                         if (shopVideoObj) shopVideoObj.getTracks().forEach(track => track.stop());
-                        shopVideoObj = null;
-                        targetUserId = data.userId;
-                        targetUserIdDisplay.textContent = targetUserId;
-                        showSection(remittanceAmountSection);
+                        shopVideoObj = null; targetUserId = data.userId;
+                        targetUserIdDisplay.textContent = targetUserId; showSection(remittanceAmountSection);
                         return;
                     }
                 } catch (e) {}
@@ -185,50 +149,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- イベントリスナー ---
-    generateQrBtn.addEventListener('click', () => {
+    generateQrBtn.onclick = () => {
         const amount = paymentAmountInput.value;
         if (!amount || amount <= 0) return alert("金額を入力してください");
         startPayment(amount);
-    });
+    };
 
-    startRemittanceBtn.addEventListener('click', startShopQrReader);
-    cancelRemittanceBtn.addEventListener('click', () => { 
-        if (shopVideoObj) shopVideoObj.getTracks().forEach(track => track.stop());
-        shopVideoObj = null;
-        showSection(mainShopSection); 
-    });
+    startRemittanceBtn.onclick = startShopQrReader;
+    cancelRemittanceBtn.onclick = () => { if (shopVideoObj) shopVideoObj.getTracks().forEach(track => track.stop()); shopVideoObj = null; showSection(mainShopSection); };
+    backToScanBtn.onclick = startShopQrReader;
 
-    backToScanBtn.addEventListener('click', startShopQrReader);
-
-    confirmRemittanceBtn.addEventListener('click', async () => {
+    confirmRemittanceBtn.onclick = async () => {
         const amount = parseInt(remittanceAmountInput.value);
-        if (!amount || amount <= 0) return alert('金額を入力してください');
+        if (!amount || amount <= 0) return alert('金額を入力');
         if (!confirm(`${amount}円を送金しますか？`)) return;
 
         try {
-            await database.ref('remittances/' + targetUserId).push({
-                amount: amount, shopId: SHOP_ID, timestamp: firebase.database.ServerValue.TIMESTAMP
+            const now = new Date().toISOString();
+            // 1. スプレッドシート連携用パス(paymentStatuses)にマイナス金額で送る
+            await database.ref('paymentStatuses').push({
+                amount: -amount, shopId: SHOP_ID, customerId: targetUserId, timestamp: now
             });
 
-            // 履歴保存＆描画
-            saveAndRender('outgo', amount, targetUserId);
+            // 2. 本来の送金パスにも保存
+            await database.ref('remittances/' + targetUserId).push({ amount: amount, shopId: SHOP_ID, timestamp: now });
 
+            saveAndRender('outgo', amount, targetUserId);
             sentAmountDisplay.textContent = `¥ ${amount.toLocaleString()}`;
             sentToUserDisplay.textContent = `宛先ID: ${targetUserId}`;
             showSection(remittanceCompSection);
+            autoTimer = setTimeout(() => { if (!remittanceCompSection.classList.contains('hidden')) showSection(mainShopSection); }, AUTO_DELAY);
+        } catch (e) { alert('失敗: ' + e.message); }
+    };
 
-            // 2秒後にメインへ
-            autoTimer = setTimeout(() => {
-                if (!remittanceCompSection.classList.contains('hidden')) showSection(mainShopSection);
-            }, AUTO_DELAY);
-        } catch (e) { alert('送金失敗: ' + e.message); }
-    });
+    resetAppBtn.onclick = () => showSection(mainShopSection);
+    backToMainFromShopCompletionBtn.onclick = () => showSection(mainShopSection);
+    if (backToMainFromRemittanceBtn) backToMainFromRemittanceBtn.onclick = () => showSection(mainShopSection);
 
-    // 画面遷移・リセットボタン
-    resetAppBtn.addEventListener('click', () => showSection(mainShopSection));
-    backToMainFromShopCompletionBtn.addEventListener('click', () => showSection(mainShopSection));
-    if (backToMainFromRemittanceBtn) backToMainFromRemittanceBtn.addEventListener('click', () => showSection(mainShopSection));
-
-    // 起動時にLocalStorageから履歴を読み込む
     loadHistory();
 });
