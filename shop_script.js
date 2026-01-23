@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let listener = null;
     let shopVideoObj = null;
     let targetUserId = null;
-    // autoCloseTimer は削除しました（手動で閉じるため）
 
     function showSection(target) {
         [mainShopSection, qrDisplaySection, shopScannerSection, remittanceAmountSection, paymentReceivedSection].forEach(s => s.classList.add('hidden'));
@@ -75,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 showSection(paymentReceivedSection);
 
-                // ★修正: 自動で閉じないように変更（連続支払いや確認のため手動で戻る）
+                // ★自動で閉じない設定（連続支払いは、手動で戻るボタンを押して行う）
             }
         });
     });
@@ -83,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 送金カメラ ---
     function startCamera() {
         showSection(shopScannerSection);
-        // カメラ設定: iPhone等対応
         shopCameraVideo.setAttribute("playsinline", true);
         shopCameraVideo.setAttribute("muted", true);
 
