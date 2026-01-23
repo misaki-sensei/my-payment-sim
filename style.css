@@ -1,6 +1,4 @@
-/* =========================================
-   1. 基本設定 (アップロードされた元のコード)
-   ========================================= */
+/* 基本設定 */
 :root {
     --paypay-blue: #007bff;
     --paypay-red: #ff3366;
@@ -101,12 +99,6 @@ button {
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     width: 100%;
     box-sizing: border-box;
-    /* ボタン同士の間隔を確保 */
-    margin-bottom: 15px; 
-}
-/* 最後のボタンだけマージンを消す調整 */
-button:last-child {
-    margin-bottom: 0;
 }
 
 .primary-btn { /* 生成、メインに戻る, チャージ実行 */
@@ -155,7 +147,7 @@ button:last-child {
     box-shadow: 0 4px 10px rgba(255, 51, 102, 0.2);
 }
 
-.toggle-btn { /* 戻るボタン、受け取りボタン */
+.toggle-btn { /* 戻るボタン */
     background-color: var(--paypay-green);
     color: white;
     box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
@@ -179,6 +171,7 @@ button:last-child {
 .charge-toggle-btn {
     background-color: #6a5acd; /* 紫系 */
     box-shadow: 0 4px 10px rgba(106, 90, 205, 0.2);
+    margin-top: 15px; /* QRボタンとの間隔 */
 }
 .charge-toggle-btn:hover {
     background-color: #584baa;
@@ -255,7 +248,7 @@ input[type="text"] {
 
 .buttons {
     display: flex;
-    flex-direction: column; /* ★ボタンを縦並びに戻す */
+    justify-content: space-around;
     gap: 15px;
 }
 
@@ -275,15 +268,12 @@ input[type="text"] {
     justify-content: center;
     color: white;
     font-size: 0.9em;
-    border-radius: 12px; /* 角丸追加 */
 }
 .qr-camera-video {
    position: absolute;
-   top: 0px;
-   left: 0px;
-   width: 100%;
-   height: 100%;
-   object-fit: cover;
+    top: 0px;
+    left: 0px;
+    visibility: hidden;
 }
 .qr-camera-area canvas { /* QRコード解析用の一時的なキャンバス */
     display: none; /* 通常は非表示 */
@@ -327,7 +317,7 @@ input[type="text"] {
     padding: 10px 0;
     border-top: 1px dashed var(--border-light);
     border-bottom: 1px dashed var(--border-light);
-    white-space: normal;
+    white-space: normal; /* ★変更: 折り返しを許可 */
 }
 .read-amount-display span {
     color: var(--paypay-red);
@@ -339,6 +329,7 @@ input[type="text"] {
     padding: 25px;
 }
 
+/* ★追加スタイル★ */
 .predicted-balance-display {
     font-size: 1.1em;
     font-weight: bold;
@@ -353,33 +344,29 @@ input[type="text"] {
     font-size: 1.3em;
     color: #6a5acd; /* チャージの色に合わせる */
 }
+/* ★ここまで追加スタイル★ */
 
 
 /* 店舗アプリ: QRコード表示セクション */
 .qr-display-section {
     padding: 25px;
 }
-.qr-code-display div, .qr-code-placeholder div { /* QRコードのCanvas要素 */
-    width: 200px !important;
-    height: 200px !important;
+.qr-code-display div { /* QRコードのCanvas要素 */
+    width: 200px;
+    height: 200px;
     border: 1px solid #f0f0f0;
     display: block;
     margin: 0 auto 15px auto;
     border-radius: 8px;
-    image-rendering: pixelated;
-    background-color: white;
+    image-rendering: pixelated; /* QRコードがぼやけないように */
 }
-.qr-code-display img, .qr-code-placeholder img {
-    margin: auto;
-}
-
 .qr-info {
     font-size: 0.95em;
     color: var(--text-secondary);
     font-weight: 500;
     line-height: 1.4;
 }
-.url-text {
+.url-text { /* `qrUrlText` と `small-text` に適用 */
     font-size: 0.85em;
     color: #555;
     background-color: #f0f8ff;
@@ -414,7 +401,7 @@ input[type="text"] {
 .status-failed {
     color: var(--paypay-red); /* 赤 */
 }
-.payment-status-section .icon {
+.payment-status-section .icon { /* ステータスアイコン */
     font-size: 1em;
     margin-right: 8px;
 }
@@ -451,6 +438,7 @@ input[type="text"] {
     font-weight: bold;
     color: var(--paypay-dark-blue);
     margin: 0;
+    /* white-space: normal; (明示しない場合はデフォルトで折り返します) */
 }
 
 .completed-amount {
@@ -459,6 +447,7 @@ input[type="text"] {
     color: var(--paypay-red);
     margin: 0;
     letter-spacing: -0.02em;
+    /* white-space: normal; (明示しない場合はデフォルトで折り返します) */
 }
 
 .thanks-message {
@@ -483,10 +472,11 @@ input[type="text"] {
     background-color: #f0e6ff;
     border: 1px solid #d8baff;
 }
+/* ★追加: チャージ完了メッセージは折り返さない★ */
 .charge-completion-section .completion-message {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: hidden; /* 溢れたテキストを隠す */
+    text-overflow: ellipsis; /* 溢れたテキストを省略符号で表示 */
 }
 
 
@@ -522,7 +512,7 @@ input[type="text"] {
     margin: 0;
 }
 
-/* カスタムスクロールバー */
+/* カスタムスクロールバー (Webkit) */
 #transactionHistory::-webkit-scrollbar, #shopTransactionHistory::-webkit-scrollbar {
     width: 8px;
 }
@@ -541,14 +531,14 @@ input[type="text"] {
 #transactionHistory li, #shopTransactionHistory li {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
-    gap: 5px 10px;
+    display: grid; /* FlexboxからGridに変更 */
+    grid-template-columns: auto 1fr; /* 1列目はコンテンツ幅、2列目は残り */
+    grid-template-rows: auto auto; /* 2行 */
+    align-items: center; /* グリッドセル内で垂直中央揃え */
+    gap: 5px 10px; /* 行間5px、列間10px */
     font-size: 0.95em;
     transition: background-color 0.2s ease;
-    white-space: normal;
+    white-space: normal; /* li全体は折り返しを許可 */
 }
 
 
@@ -565,19 +555,25 @@ input[type="text"] {
     color: var(--paypay-green);
     font-weight: 600;
 }
+#transactionHistory li.charge span:first-child::before, #shopTransactionHistory li.charge span:first-child::before {
+    content: "💰 ";
+    margin-right: 5px;
+}
+/* チャージは紫系で表示 */
 #transactionHistory li.charge {
     color: #6a5acd;
 }
 #transactionHistory li.charge span:first-child::before {
-    content: "💰 ";
+    content: "💰 "; /* チャージは通貨アイコン */
     margin-right: 5px;
 }
 
+/* ★変更点: 取引履歴のチャージ項目は折り返さない★ */
 #transactionHistory li.charge > span:first-child,
 #shopTransactionHistory li.charge > span:first-child {
     grid-column: 1 / 2;
     grid-row: 1 / span 2;
-    white-space: nowrap;
+    white-space: nowrap; /* チャージ金額は折り返さない */
     align-self: center;
 }
 
@@ -590,11 +586,12 @@ input[type="text"] {
     margin-right: 5px;
 }
 
+/* ★変更点: 取引履歴の支払い項目は折り返さないように変更★ */
 #transactionHistory li.payment > span:first-child,
 #shopTransactionHistory li.payment > span:first-child {
     grid-column: 1 / 2;
     grid-row: 1 / span 2;
-    white-space: nowrap;
+    white-space: nowrap; /* 支払い金額も折り返さない */
     align-self: center;
 }
 
@@ -603,43 +600,29 @@ input[type="text"] {
     font-size: 0.8em;
     color: var(--text-secondary);
     font-weight: normal;
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-    text-align: right;
-    white-space: normal;
+    grid-column: 2 / 3; /* 2列目 */
+    grid-row: 1 / 2;    /* 1行目 */
+    text-align: right; /* 右寄せ */
+    white-space: normal; /* 折り返し可能 */
 }
 
-/* USRIDのスタイル */
+/* USRIDのスタイル - HTMLでUSRIDが2番目のspan要素であることを想定 */
 #transactionHistory li span:nth-of-type(2),
 #shopTransactionHistory li span:nth-of-type(2) {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-    text-align: right;
-    font-size: 0.8em;
+    grid-column: 2 / 3; /* 2列目 */
+    grid-row: 2 / 3;    /* 2行目 */
+    text-align: right; /* 右寄せ */
+    font-size: 0.8em; /* USRIDは少し小さめに */
     color: var(--text-secondary);
-    white-space: normal;
+    white-space: normal; /* 折り返し可能 */
 }
 
-/* =========================================
-   ★ここから下だけ追加：新機能用スタイル (デザインには影響させない)
-   ========================================= */
-.camera-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1/1;
-    margin: 0 auto 15px auto;
-    background-color: #000;
-    border-radius: 12px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.camera-container video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+/* =========================================================
+   ★以下、新機能（送金・受け取り）用に追加したスタイル
+   既存のスタイルには一切変更を加えていません
+   ========================================================= */
+
+/* 受け取り用QRコードの表示エリア */
 .qr-display-container {
     display: flex;
     flex-direction: column;
@@ -651,6 +634,39 @@ input[type="text"] {
     border: 2px dashed #e0e0e0;
     border-radius: 12px;
 }
-.qr-code-placeholder {
-    margin-bottom: 15px;
+.qr-code-placeholder div, .qr-code-display div {
+    width: 200px !important;
+    height: 200px !important;
+    border: 1px solid #f0f0f0;
+    display: block;
+    margin: 0 auto 15px auto;
+    border-radius: 8px;
+    image-rendering: pixelated;
+    background-color: white;
+}
+.qr-code-placeholder img, .qr-code-display img {
+    margin: auto;
+}
+.instruction-text {
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-top: 10px;
+}
+/* 送金機能（カメラ）のコンテナ */
+.camera-container {
+    position: relative;
+    width: 100%;
+    margin: 0 auto 15px auto;
+    background-color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px;
+}
+.camera-container video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
 }
