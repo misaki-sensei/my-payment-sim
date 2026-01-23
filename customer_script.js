@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chargedAmountEl = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
+    // ★追加: 受け取り完了画面用
     const receiveCompletionSection = document.getElementById('receiveCompletionSection');
     const receivedAmountDisplayEl = document.getElementById('receivedAmountDisplay');
     const backToMainFromReceiveBtn = document.getElementById('backToMainFromReceiveBtn');
@@ -54,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dailyCharges = [];
     let scannedData = null;
     let videoStream = null;
-    let requestAnimFrameId = null; 
+    let requestAnimFrameId = null; // カメラの描画ループ用
     let myCustomerId = localStorage.getItem('customerMockPayPayId');
     let autoCloseTimer = null; 
 
@@ -93,23 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // ★修正: 安全な画面切り替え関数（要素が存在しない場合はスキップ）
     const showSection = (target) => {
         if (autoCloseTimer) {
             clearTimeout(autoCloseTimer);
             autoCloseTimer = null;
         }
         
-        const allSections = [
-            mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, 
-            paymentCompletionSection, chargeCompletionSection, receiveCompletionSection
-        ];
-
-        allSections.forEach(s => {
-            if (s) s.classList.add('hidden'); // nullチェックを追加
-        });
-
-        if (target) target.classList.remove('hidden');
+        [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, paymentCompletionSection, chargeCompletionSection, receiveCompletionSection].forEach(s => s.classList.add('hidden'));
+        target.classList.remove('hidden');
     };
 
     const updatePredictedBalance = () => {
@@ -119,13 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- QRカメラ (支払い用) ---
+    // ★修正: お店側と同じ、より確実な起動方法に変更
     const startQrReader = () => {
         showSection(qrReaderSection);
-        if (cameraStatus) {
-            cameraStatus.textContent = 'カメラ起動中...';
-            cameraStatus.classList.remove('hidden');
-        }
+        cameraStatus.textContent = 'カメラ起動中...';
+        cameraStatus.classList.remove('hidden');
 
+        // ビデオ要素の設定を確実に行う
         qrCameraVideo.setAttribute("playsinline", true); 
         qrCameraVideo.setAttribute("muted", true); 
         qrCameraVideo.style.display = 'block';
@@ -136,11 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 qrCameraVideo.srcObject = stream;
                 qrCameraVideo.play();
                 requestAnimFrameId = requestAnimationFrame(tick);
-                if (cameraStatus) cameraStatus.textContent = '読み取り中...';
+                cameraStatus.textContent = '読み取り中...';
             })
             .catch(err => {
                 console.error("Camera Error:", err);
-                if (cameraStatus) cameraStatus.textContent = 'カメラエラー: ' + err.message;
+                cameraStatus.textContent = 'カメラエラー: ' + err.message;
             });
     };
 
@@ -158,16 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
+                    // 店舗IDと金額がある場合のみ反応
                     if (data.amount && data.shopId) {
                         scannedData = data;
-                        if (cameraStatus) cameraStatus.textContent = '読み取り成功';
+                        cameraStatus.textContent = '読み取り成功';
                         scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
                         readAmountDisplay.classList.remove('hidden');
                         confirmPayBtn.classList.remove('hidden');
-                        stopQrReader(false);
+                        
+                        // 読み取り成功したらカメラ停止
+                        stopQrReader(false); // false = セクション遷移はしない
                         return;
                     }
-                } catch(e) {}
+                } catch(e) {
+                    // JSONでないデータは無視
+                }
             }
         }
         if (videoStream && videoStream.active) {
@@ -182,6 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
             videoStream = null;
         }
         qrCameraVideo.style.display = 'none';
+        if (hideSectionFlag) {
+            // キャンセルボタンなどで完全に閉じる場合
+        }
     };
 
     // --- チャージ処理 ---
@@ -212,7 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
         chargedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         
         showSection(chargeCompletionSection);
-        // チャージ完了時は手動で閉じる
+
+        autoCloseTimer = setTimeout(() => {
+            showSection(mainPaymentSection);
+        }, AUTO_CLOSE_DELAY);
     };
 
     // --- 支払い処理 ---
@@ -235,20 +238,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        stopQrReader(); 
+        stopQrReader(); // 確実に停止
         updateBalanceDisplay();
         updateHistoryDisplay();
         completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         completedShopIdEl.textContent = scannedData.shopId;
         
         showSection(paymentCompletionSection);
-        // 支払い完了時も手動で閉じる
+
+        autoCloseTimer = setTimeout(() => {
+            showSection(mainPaymentSection);
+        }, AUTO_CLOSE_DELAY);
     };
 
     // --- イベント ---
     loadAppData();
 
-    showQrReaderBtn.addEventListener('click', startQrReader); 
+    showQrReaderBtn.addEventListener('click', startQrReader); // 修正済みの関数を呼ぶ
     
     showChargeBtn.addEventListener('click', () => { 
         chargeAmountInput.value = ''; 
@@ -271,9 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
-    if (backToMainFromReceiveBtn) {
-        backToMainFromReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
-    }
+    backToMainFromReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
 
     confirmChargeBtn.addEventListener('click', handleCharge);
     confirmPayBtn.addEventListener('click', handlePayment);
@@ -294,10 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBalanceDisplay();
                 updateHistoryDisplay();
 
+                // ★修正: alertではなく専用の完了画面を表示
                 receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
                 showSection(receiveCompletionSection);
 
-                // ★送金受け取り時のみ3秒後に閉じる
+                // 3秒後に自動で閉じる
                 autoCloseTimer = setTimeout(() => {
                     showSection(mainPaymentSection);
                 }, AUTO_CLOSE_DELAY);
