@@ -1,25 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店舗アプリ (PosiPay)</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script type="text/javascript" src="qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-</head>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10",
+            authDomain: "my-paypay-sim-45735.firebaseapp.com",
+            databaseURL: "https://my-paypay-sim-45735-default-rtdb.firebaseio.com/",
+            projectId: "my-paypay-sim-45735",
+            storageBucket: "my-paypay-sim-45735.firebasestorage.app",
+            messagingSenderId: "367984856012",
+            appId: "1:367984856012:web:15842c3855502758b90709"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+    <script src="shop_script.js" defer></script>
+</head>
 <body>
     <div class="container">
+        <header class="header">
+            <h1 class="app-title">PosiPay 店舗</h1>
+            <p class="shop-name" id="shopNameDisplay">Yanahara SHOP</p>
+        </header>
+
         <div id="mainShopSection" class="card">
-            <div class="action-buttons" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                <p>お客さまへの送金（返金・買取など）</p>
+            <h2 class="section-title">会計金額を入力</h2>
+            
+            <div class="input-group">
+                <span class="currency-symbol">¥</span>
+                <input type="number" id="paymentAmount" placeholder="0" inputmode="numeric">
+            </div>
+
+            <div class="buttons">
+                <button id="generateQrBtn" class="primary-btn">
+                    <span class="icon">📷</span> QR作成
+                </button>
+            </div>
+            
+            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <p class="section-description" style="font-size:0.9em; margin-bottom:10px;">お客さまへ送金（返金・買取）</p>
                 <button id="startRemittanceBtn" class="secondary-btn" style="background-color: #ff9800; color: white;">
                     <span class="icon">💸</span> 送金する (QR読取)
                 </button>
             </div>
         </div>
 
+        <div id="qrDisplaySection" class="section hidden card">
+            <h2 class="section-title">お支払いQRコード</h2>
+            <div class="qr-display-section">
+                <div id="qrCodeCanvas" class="qr-code-display"></div> 
+                <p class="qr-info">お客さまのアプリで<br>読み取ってください</p>
+                <p class="small-text url-text" id="qrUrlText"></p>
+                
+                <p class="payment-status-message" id="paymentStatusMessage">
+                    ⏳ 顧客からの支払い待ち...
+                </p>
+            </div>
+            <button id="resetAppBtn" class="secondary-btn">キャンセル・戻る</button>
+        </div>
+
         <div id="shopScannerSection" class="section hidden card">
-            <h2 class="section-title">お客さまのQRを読み取り</h2>
+            <h2 class="section-title">送金先のQRを読み取り</h2>
             <div class="camera-container">
-                <div id="loadingMessage">🎥 カメラを起動中...</div>
                 <video id="shopCameraVideo" playsinline="true"></video>
                 <canvas id="shopQrCanvas" hidden></canvas>
             </div>
+            <p class="instruction-text">お客さまの「受け取りQR」を映してください</p>
             <button id="cancelRemittanceBtn" class="secondary-btn">キャンセル</button>
         </div>
 
@@ -31,7 +88,23 @@
                 <input type="number" id="remittanceAmountInput" placeholder="0" inputmode="numeric">
             </div>
             <button id="confirmRemittanceBtn" class="primary-btn">送金を実行</button>
-            <button id="backToScanBtn" class="secondary-btn">戻る</button>
+            <button id="backToScanBtn" class="secondary-btn" style="margin-top:10px;">戻る</button>
+        </div>
+
+        <div class="payment-received-section hidden" id="paymentReceivedSection">
+            <div class="completion-card card">
+                <div class="completion-icon green-bg" role="img" aria-label="入金完了">✅</div>
+                <p class="completion-message">入金が完了しました！</p>
+                <p class="received-amount" id="receivedAmount">¥ 0</p>
+                <p class="received-customer-info" id="receivedCustomerInfo"></p>
+            </div>
+            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+        </div>
+
+        <div class="history-section card">
+            <h2 class="section-title">取引履歴</h2>
+            <ul id="shopTransactionHistory"></ul>
         </div>
     </div>
 </body>
+</html>
