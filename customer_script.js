@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmPayBtn = document.getElementById('confirmPayBtn');
     const cancelQrReadBtn = document.getElementById('cancelQrReadBtn');
 
-    // 受け取りセクション
     const receiveQrSection = document.getElementById('receiveQrSection');
     const receiveQrCodeEl = document.getElementById('receiveQrCode');
     const closeReceiveBtn = document.getElementById('closeReceiveBtn');
@@ -32,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const completedAmountEl = document.getElementById('completedAmount');
     const completedShopIdEl = document.getElementById('completedShopId');
     const backToMainFromCompletionBtn = document.getElementById('backToMainFromCompletionBtn');
+    
     const chargeCompletionSection = document.getElementById('chargeCompletionSection');
     const chargedAmountEl = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
     const DAILY_CHARGE_LIMIT = 100000; 
     const MAX_TOTAL_BALANCE = 100000000; 
+    const AUTO_CLOSE_DELAY = 3000; // ★追加: 3秒後に自動で閉じる
 
     // 変数
     let balance = 0;
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let videoStream = null;
     let qrScanInterval = null;
     let myCustomerId = localStorage.getItem('customerMockPayPayId');
+    let autoCloseTimer = null; // ★追加: タイマー管理用
 
     if (!myCustomerId) {
         myCustomerId = `CUST-${Math.floor(Math.random() * 900000) + 100000}`;
@@ -88,19 +90,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showSection = (target) => {
+        // 既存のタイマーがあればキャンセル（画面遷移でキャンセルされないようにする場合もあるが、今回は安全のため）
+        if (autoCloseTimer) {
+            clearTimeout(autoCloseTimer);
+            autoCloseTimer = null;
+        }
+        
         [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, paymentCompletionSection, chargeCompletionSection].forEach(s => s.classList.add('hidden'));
         target.classList.remove('hidden');
     };
 
-    // 予測残高の計算・表示更新
     const updatePredictedBalance = () => {
         const val = parseInt(chargeAmountInput.value);
-        // 入力が空または不正な場合は0として計算
         const addAmount = isNaN(val) ? 0 : val;
         predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ (支払い用) ---
+    // --- QRカメラ ---
     const startQrReader = async () => {
         cameraStatus.classList.remove('hidden');
         cameraStatus.textContent = 'カメラ起動中...';
@@ -169,7 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBalanceDisplay();
         updateHistoryDisplay();
         chargedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
+        
         showSection(chargeCompletionSection);
+
+        // ★追加: 3秒後に自動でメイン画面へ戻る
+        autoCloseTimer = setTimeout(() => {
+            showSection(mainPaymentSection);
+        }, AUTO_CLOSE_DELAY);
     };
 
     // --- 支払い処理 ---
@@ -197,7 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHistoryDisplay();
         completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         completedShopIdEl.textContent = scannedData.shopId;
+        
         showSection(paymentCompletionSection);
+
+        // ★追加: 3秒後に自動でメイン画面へ戻る
+        autoCloseTimer = setTimeout(() => {
+            showSection(mainPaymentSection);
+        }, AUTO_CLOSE_DELAY);
     };
 
     // --- イベント ---
@@ -205,10 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showQrReaderBtn.addEventListener('click', () => { showSection(qrReaderSection); startQrReader(); });
     
-    // ★修正: チャージボタンを押した際、入力と予測残高表示をリセットする
     showChargeBtn.addEventListener('click', () => { 
-        chargeAmountInput.value = ''; // 入力を空にする
-        updatePredictedBalance();     // 予測残高を「現在の残高」のみの表示に戻す
+        chargeAmountInput.value = ''; 
+        updatePredictedBalance();     
         showSection(chargeSection); 
     });
     
@@ -224,13 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelQrReadBtn.addEventListener('click', () => { stopQrReader(); showSection(mainPaymentSection); });
     cancelChargeBtn.addEventListener('click', () => showSection(mainPaymentSection));
     closeReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
+    
+    // 手動で「戻る」ボタンを押した際も即座に戻る（タイマーキャンセル含む）
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
 
     confirmChargeBtn.addEventListener('click', handleCharge);
     confirmPayBtn.addEventListener('click', handlePayment);
 
-    // 入力があるたびに予測残高を更新
     chargeAmountInput.addEventListener('input', updatePredictedBalance);
 
     window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
