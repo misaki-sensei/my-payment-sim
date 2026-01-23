@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ★追加設定: 制限と初期値
     const DAILY_CHARGE_LIMIT = 100000; // 1日の上限10万円
-    const INITIAL_BALANCE = 100000000; // 初期資産1億円
+    const INITIAL_BALANCE = 0;        // ★初期資産を0円に設定（表示用）
+    const MAX_ASSETS = 100000000;     // 内部的な総資産設定（1億円）
 
     // 変数
     let balance = 0;
@@ -67,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 関数 ---
     const loadAppData = () => {
-        // ★初期残高の設定（ストレージが空なら1億円をセット）
+        // ★修正: ストレージが空なら INITIAL_BALANCE(0) をセット
         const storedBalance = localStorage.getItem(LOCAL_STORAGE_BALANCE_KEY);
         if (storedBalance === null) {
             balance = INITIAL_BALANCE;
@@ -158,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const data = JSON.parse(code.data);
                     if (data.amount && data.shopId && data.transactionId) {
-                        // 読み取り成功時のフィードバック
                         if(cameraStatus) {
                             cameraStatus.textContent = '✅ 読み取りました！';
                             cameraStatus.style.color = "#28a745";
@@ -222,13 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
             completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
             completedShopIdEl.textContent = scannedData.shopId;
             showSection(paymentCompletionSection);
-            autoTimer = setTimeout(() => { startQrReader(); }, AUTO_DELAY);
+            autoTimer = setTimeout(() => { showSection(mainPaymentSection); }, AUTO_DELAY);
         } catch (e) {
             alert("支払いエラー: " + e.message);
         }
     };
 
-    // --- チャージ処理 (★10万円制限・回数無制限) ---
+    // --- チャージ処理 (10万円制限・回数無制限) ---
     const handleCharge = () => {
         const amount = parseInt(chargeAmountInput.value);
         if (!amount || amount <= 0) return alert('正しい金額を入力してください');
