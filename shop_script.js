@@ -1,69 +1,106 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const els = {
-        main: document.getElementById('mainShopSection'),
-        amtInput: document.getElementById('paymentAmount'),
-        qrSection: document.getElementById('qrDisplaySection'),
-        qrCanvas: document.getElementById('qrCodeCanvas'),
-        receivedSection: document.getElementById('paymentReceivedSection'),
-        history: document.getElementById('shopTransactionHistory')
-    };
+    // --- DOM要素 ---
+    const mainShopSection = document.getElementById('mainShopSection');
+    const paymentAmountInput = document.getElementById('paymentAmount');
+    const generateQrBtn = document.getElementById('generateQrBtn');
+    const qrDisplaySection = document.getElementById('qrDisplaySection');
+    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+    const resetAppBtn = document.getElementById('resetAppBtn');
 
+    const paymentReceivedSection = document.getElementById('paymentReceivedSection');
+    const receivedAmountEl = document.getElementById('receivedAmount');
+    const payerIdEl = document.getElementById('payerId'); // お客ID表示用（HTMLに追加が必要）
+    const shopTransactionHistoryEl = document.getElementById('shopTransactionHistory');
+    const backToMainFromShopCompletionBtn = document.getElementById('backToMainFromShopCompletionBtn');
+
+    // --- 定数 ---
     const SHOP_ID = 'YanaharaSHOP001';
-    let currentId = null;
+    const AUTO_REGENERATE_DELAY = 2000; // 2秒
+
+    // 変数
+    let currentTransactionId = null;
     let listener = null;
 
-    function show(target) {
-        [els.main, els.qrSection, els.receivedSection].forEach(s => s.classList.add('hidden'));
-        target.classList.remove('hidden');
-    }
-
-    function generate(amt) {
-        currentId = 'txn_' + Date.now();
-        database.ref('payment_requests/' + currentId).set({
-            shopId: SHOP_ID, amount: amt, status: 'pending', timestamp: firebase.database.ServerValue.TIMESTAMP
+    // --- セクション切り替え ---
+    const showSection = (target) => {
+        [mainShopSection, qrDisplaySection, paymentReceivedSection].forEach(s => {
+            if (s) s.classList.add('hidden');
         });
-        els.qrCanvas.innerHTML = '';
-        new QRCode(els.qrCanvas, {
-            text: JSON.stringify({ shopId: SHOP_ID, amount: amt, transactionId: currentId }),
-            width: 200, height: 200
+        if (target) target.classList.remove('hidden');
+    };
+
+    // --- QRコード生成と支払い監視 ---
+    const startPayment = (amount) => {
+        // 1. トランザクションIDの発行
+        currentTransactionId = 'txn_' + Date.now();
+
+        // 2. Firebaseに支払いリクエストを作成
+        database.ref('payment_requests/' + currentTransactionId).set({
+            shopId: SHOP_ID,
+            amount: amount,
+            status: 'pending',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
         });
 
-        listener = database.ref('payment_status/' + currentId).on('value', snap => {
-            const val = snap.val();
-            if (val && val.status === 'completed') {
-                database.ref('payment_status/' + currentId).off('value', listener);
-                
-                // 履歴更新
+        // 3. QRコード表示
+        qrCodeCanvas.innerHTML = '';
+        new QRCode(qrCodeCanvas, {
+            text: JSON.stringify({
+                shopId: SHOP_ID,
+                amount: amount,
+                transactionId: currentTransactionId
+            }),
+            width: 200,
+            height: 200
+        });
+
+        showSection(qrDisplaySection);
+
+        // 4. 支払い完了の監視
+        if (listener) database.ref('payment_status/' + currentTransactionId).off(); // 以前のリスナー解除
+
+        listener = database.ref('payment_status/' + currentTransactionId).on('value', snapshot => {
+            const data = snapshot.val();
+            if (data && data.status === 'completed') {
+                // 監視を止める
+                database.ref('payment_status/' + currentTransactionId).off();
+
+                // 履歴に追加
                 const li = document.createElement('li');
-                li.innerHTML = `入金: ¥ ${parseInt(amt).toLocaleString()}`;
-                els.history.insertBefore(li, els.history.firstChild);
+                const dateStr = new Date().toLocaleTimeString();
+                li.innerHTML = `<span>${dateStr}</span> <span>¥ ${parseInt(amount).toLocaleString()}</span> <small>(${data.userId})</small>`;
+                shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
 
-                document.getElementById('receivedAmount').textContent = `¥ ${parseInt(amt).toLocaleString()}`;
-                show(els.receivedSection);
+                // 完了画面の表示
+                receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
+                if (payerIdEl) payerIdEl.textContent = `お客ID: ${data.userId}`;
+                showSection(paymentReceivedSection);
 
-                // ★2秒後に自動でQR再生成 (連続決済)
+                // ★【追加】2秒後に自動で同じ金額のQRコードを再表示（連続決済）
                 setTimeout(() => {
-                    if (els.main.classList.contains('hidden')) {
-                        generate(amt);
-                        show(els.qrSection);
+                    // もし店員が手動でメイン画面に戻っていなければ、再度QR生成
+                    if (!mainShopSection.classList.contains('hidden')) {
+                        startPayment(amount);
                     }
-                }, 2000);
+                }, AUTO_REGENERATE_DELAY);
             }
         });
-    }
-
-    document.getElementById('generateQrBtn').onclick = () => {
-        const amt = els.amtInput.value;
-        if (amt > 0) {
-            show(els.qrSection);
-            generate(amt);
-        }
     };
 
-    document.getElementById('resetAppBtn').onclick = () => {
-        if (listener) database.ref('payment_status/' + currentId).off('value', listener);
-        show(els.main);
-    };
-    
-    document.getElementById('backToMainFromShopCompletionBtn').onclick = () => show(els.main);
+    // --- イベントリスナー ---
+    generateQrBtn.addEventListener('click', () => {
+        const amount = paymentAmountInput.value;
+        if (!amount || amount <= 0) return alert('金額を入力してください');
+        startPayment(amount);
+    });
+
+    resetAppBtn.addEventListener('click', () => {
+        if (currentTransactionId) database.ref('payment_status/' + currentTransactionId).off();
+        showSection(mainShopSection);
+    });
+
+    backToMainFromShopCompletionBtn.addEventListener('click', () => {
+        if (currentTransactionId) database.ref('payment_status/' + currentTransactionId).off();
+        showSection(mainShopSection);
+    });
 });
