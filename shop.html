@@ -34,16 +34,13 @@
 
         <div id="mainShopSection" class="card">
             <h2 class="section-title">支払い金額設定</h2>
-            
             <div class="input-group">
                 <label for="paymentAmount">金額:</label>
                 <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" value="0">
             </div>
-
             <button id="generateQrBtn" class="primary-btn">
                 <span class="icon">🔗</span> QRコードを表示
             </button>
-            
             <div style="margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px;">
                 <p style="font-size:0.9em; margin-bottom:10px;">お客様へ送金（返金など）</p>
                 <button id="startRemittanceBtn" class="secondary-btn" style="background-color:#ff9800; color:white;">
@@ -57,16 +54,12 @@
             <div class="qr-display-section">
                 <div id="qrCodeCanvas" class="qr-code-display"></div> 
                 <p class="qr-info">お客様のアプリで読み取ってください</p>
-                <p class="small-text url-text" id="qrUrlText"></p>
-                <p class="small-text">(金額と店舗IDが含まれています)</p>
             </div>
-            
              <p class="payment-status-message" id="paymentStatusMessage" style="margin-top:15px; font-weight: bold; color: #007bff;">
                 ⏳ 顧客からの支払い待ち...
             </p>
-
             <button id="resetAppBtn" class="secondary-btn" style="margin-top: 20px;">
-                <span class="icon">🔄</span> リセット
+                <span class="icon">🔄</span> キャンセル
             </button>
         </div>
 
@@ -92,28 +85,29 @@
 
         <div class="payment-received-section hidden" id="paymentReceivedSection">
             <div class="completion-card card">
-                <div class="completion-icon green-bg" role="img" aria-label="入金完了">✅</div>
+                <div class="completion-icon" style="background-color:#28a745; color:white; width:80px; height:80px; border-radius:50%; display:flex; justify-content:center; align-items:center; margin:0 auto 20px; font-size:40px;">✅</div>
                 <p class="completion-message">入金が完了しました！</p>
-                <p class="received-amount" id="receivedAmount">¥ 0</p>
-                <p class="received-customer-info" id="receivedCustomerInfo"></p>
-                <p class="thanks-message">ご利用ありがとうございます。</p>
+                <p class="received-amount" id="receivedAmount" style="font-size:2em; font-weight:bold;">¥ 0</p>
+                <p class="received-customer-info" id="receivedCustomerInfo" style="color:#666;"></p>
+                <p style="color:#888; font-size:12px;">2秒後に次の支払い待機に戻ります</p>
             </div>
-            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+            <button id="backToMainFromShopCompletionBtn" class="primary-btn">メイン画面に戻る</button>
         </div>
 
-        <div id="remittanceCompletionSection" class="section hidden">
-            <div class="completion-card card">
-                <div class="completion-icon" style="background-color: #ff9800; color: white; display: flex; justify-content: center; align-items: center; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px; font-size: 40px;" role="img" aria-label="送金完了">💸</div>
+        <div id="remittanceCompletionSection" class="section hidden card">
+            <div class="completion-card card" style="box-shadow:none; padding:0;">
+                <div class="completion-icon" style="background-color: #ff9800; color: white; display: flex; justify-content: center; align-items: center; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px; font-size: 40px;">💸</div>
                 <p class="completion-message">送金が完了しました！</p>
-                <p id="sentAmountDisplay" class="completed-amount" style="font-size: 2.5em; font-weight: bold; color: #333; margin: 10px 0;">¥ 0</p>
+                <p id="sentAmountDisplay" style="font-size: 2.5em; font-weight: bold; color: #333; margin: 10px 0;">¥ 0</p>
                 <p id="sentToUserDisplay" style="color: #666; font-size: 14px; margin-bottom: 20px;"></p>
                 <p style="color: #888; font-size: 12px; margin-bottom: 15px;">3秒後に自動的にメイン画面に戻ります</p>
             </div>
-            <button id="backToMainFromRemittanceBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+            <button id="backToMainFromRemittanceBtn" class="primary-btn">メイン画面に戻る</button>
         </div>
+
         <div class="history-section card">
             <h2 class="section-title">支払い完了履歴</h2>
-            <ul id="shopTransactionHistory"></ul>
+            <ul id="shopTransactionHistory" style="padding:0;"></ul>
         </div>
     </div>
     <script src="shop_script.js"></script>
