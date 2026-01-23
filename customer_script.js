@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
     const DAILY_CHARGE_LIMIT = 100000; 
     const MAX_TOTAL_BALANCE = 100000000; 
-    const AUTO_CLOSE_DELAY = 3000; // 3秒
+    const AUTO_CLOSE_DELAY = 3000; // 受け取り時のみ3秒で閉じる
 
     // 変数
     let balance = 0;
@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // 画面切り替え（安全策付き）
     const showSection = (target) => {
         if (autoCloseTimer) {
             clearTimeout(autoCloseTimer);
@@ -117,13 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
         predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ (支払い用) ---
-    // ★修正: 最も基本的な記述に戻しました
+    // --- QRカメラ (シンプル版・安定動作) ---
     const startQrReader = () => {
         showSection(qrReaderSection);
         if(cameraStatus) cameraStatus.textContent = 'カメラ起動中...';
 
-        // まず停止
+        // 念のため停止してから開始
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         readAmountDisplay.classList.remove('hidden');
                         confirmPayBtn.classList.remove('hidden');
                         
-                        // 読み取り成功したらループを止める
+                        // 読み取り成功でカメラ停止
                         cancelAnimationFrame(requestAnimFrameId);
                         qrCameraVideo.pause();
                         return;
@@ -171,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch(e) {}
             }
         }
-        // ループ継続
         if (videoStream && videoStream.active) {
             requestAnimFrameId = requestAnimationFrame(tick);
         }
@@ -213,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chargedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         
         showSection(chargeCompletionSection);
+        // チャージも手動で閉じる
     };
 
     // --- 支払い処理 ---
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         completedShopIdEl.textContent = scannedData.shopId;
         
         showSection(paymentCompletionSection);
-        // 手動で閉じる
+        // ★ここポイント: 自動で閉じない（手動で戻って連続支払い可能にする）
     };
 
     // --- イベント ---
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
                 showSection(receiveCompletionSection);
 
-                // ★送金受け取り時のみ3秒後に閉じる
+                // ★送金受け取り時のみ: 3秒後に自動で閉じる
                 autoCloseTimer = setTimeout(() => {
                     showSection(mainPaymentSection);
                 }, AUTO_CLOSE_DELAY);
