@@ -26,43 +26,48 @@
     </script>
 </head>
 <body>
-    <div class="container app-container" id="appContainer">
-        <div class="header">
+    <div class="container">
+        <header class="header">
             <h1 class="app-title">店舗アプリ</h1>
             <p class="shop-name">PosiPay</p>
-        </div>
+        </header>
 
-        <div class="action-section card" id="mainShopSection">
+        <div id="mainShopSection" class="card">
             <h2 class="section-title">支払い金額設定</h2>
+            
             <div class="input-group">
                 <label for="paymentAmount">金額:</label>
                 <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" value="0">
             </div>
-            <button id="generateQrBtn" class="primary-btn action-btn">
+
+            <button id="generateQrBtn" class="primary-btn">
                 <span class="icon">🔗</span> QRコードを表示
             </button>
             
             <div style="margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px;">
                 <p style="font-size:0.9em; margin-bottom:10px;">お客様へ送金（返金など）</p>
-                <button id="startRemittanceBtn" class="secondary-btn action-btn" style="background-color:#ff9800; color:white;">
+                <button id="startRemittanceBtn" class="secondary-btn" style="background-color:#ff9800; color:white;">
                     <span class="icon">💸</span> 送金する (QR読取)
                 </button>
             </div>
         </div>
 
-        <div class="qr-display-section hidden" id="qrDisplaySection">
+        <div id="qrDisplaySection" class="section hidden card">
             <h2 class="section-title">お支払いQRコード</h2>
-            <div class="card">
-                <div id="qrCodeCanvas" class="qr-code-display"></div>
+            <div class="qr-display-section">
+                <div id="qrCodeCanvas" class="qr-code-display"></div> 
                 <p class="qr-info">お客様のアプリで読み取ってください</p>
                 <p class="small-text url-text" id="qrUrlText"></p>
-                <p class="payment-status-message" id="paymentStatusMessage" style="color: #007bff;">
-                    ⏳ 顧客からの支払い待ち...
-                </p>
-                <button id="resetAppBtn" class="secondary-btn" style="margin-top: 20px;">
-                    <span class="icon">🔄</span> キャンセル
-                </button>
+                <p class="small-text">(金額と店舗IDが含まれています)</p>
             </div>
+            
+             <p class="payment-status-message" id="paymentStatusMessage" style="margin-top:15px; font-weight: bold; color: #007bff;">
+                ⏳ 顧客からの支払い待ち...
+            </p>
+
+            <button id="resetAppBtn" class="secondary-btn" style="margin-top: 20px;">
+                <span class="icon">🔄</span> リセット
+            </button>
         </div>
 
         <div id="shopScannerSection" class="section hidden card">
@@ -88,15 +93,16 @@
         <div class="payment-received-section hidden" id="paymentReceivedSection">
             <div class="completion-card card">
                 <div class="completion-icon green-bg" role="img" aria-label="入金完了">✅</div>
-                <p class="completion-message">入金完了</p>
+                <p class="completion-message">入金が完了しました！</p>
                 <p class="received-amount" id="receivedAmount">¥ 0</p>
                 <p class="received-customer-info" id="receivedCustomerInfo"></p>
+                <p class="thanks-message">ご利用ありがとうございます。</p>
             </div>
-            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">戻る</button>
+            <button id="backToMainFromShopCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">履歴</h2>
+            <h2 class="section-title">支払い完了履歴</h2>
             <ul id="shopTransactionHistory"></ul>
         </div>
     </div>
