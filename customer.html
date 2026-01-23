@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script type="text/javascript" src="qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
@@ -55,11 +57,12 @@
                 <p class="qr-instruction">
                     店舗のQRコードをカメラにかざしてください。
                 </p>
-                <div class="qr-camera-container">
+                <div class="qr-camera-area">
                     <video id="qrCameraVideo" class="qr-camera-video" autoplay playsinline></video>
-                    <canvas id="qrCanvas" class="qr-camera-area"></canvas>
+                    <canvas id="qrCanvas"></canvas>
+                    <div class="camera-status" id="cameraStatus">カメラを起動中...</div>
+                    <div class="scan-line"></div>
                 </div>
-                <p class="camera-status" id="cameraStatus">カメラを起動中...</p>
                 
                 <p class="read-amount-display hidden" id="readAmountDisplay">
                     支払金額: <span id="scannedAmount">¥ 0</span>
@@ -125,7 +128,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="customer_script.js"></script>
 </body>
 </html>
