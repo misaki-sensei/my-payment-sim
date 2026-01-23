@@ -103,13 +103,18 @@ document.addEventListener('DOMContentLoaded', () => {
         predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ ---
+    // --- QRカメラ (★修正: フィードバック追加) ---
     const startQrReader = () => {
         showSection(qrReaderSection);
         scannedData = null;
         readAmountDisplay.classList.add('hidden');
         confirmPayBtn.classList.add('hidden');
-        if(cameraStatus) cameraStatus.textContent = '読み取り中...';
+        
+        // メッセージを初期状態に戻す
+        if(cameraStatus) {
+            cameraStatus.textContent = '読み取り中...';
+            cameraStatus.style.color = "";
+        }
 
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
@@ -141,12 +146,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const data = JSON.parse(code.data);
                     if (data.amount && data.shopId && data.transactionId) {
-                        scannedData = data;
-                        scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
-                        readAmountDisplay.classList.remove('hidden');
-                        confirmPayBtn.classList.remove('hidden');
-                        cancelAnimationFrame(requestAnimFrameId);
-                        qrCameraVideo.pause();
+                        // --- 修正箇所: 読み取り成功時のフィードバック ---
+                        if(cameraStatus) {
+                            cameraStatus.textContent = '✅ 読み取りました！';
+                            cameraStatus.style.color = "#28a745";
+                            cameraStatus.style.fontWeight = "bold";
+                        }
+
+                        // 0.3秒だけ待ってからUIを切り替える (タメを作る)
+                        setTimeout(() => {
+                            scannedData = data;
+                            scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
+                            readAmountDisplay.classList.remove('hidden');
+                            confirmPayBtn.classList.remove('hidden');
+                            
+                            cancelAnimationFrame(requestAnimFrameId);
+                            qrCameraVideo.pause();
+                        }, 300);
                         return;
                     }
                 } catch(e) {}
@@ -165,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 支払い処理 (★Transaction ID連携版) ---
+    // --- 支払い処理 ---
     const handlePayment = async () => {
         if (!scannedData) return;
         const amount = parseInt(scannedData.amount);
@@ -175,17 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const nowIso = new Date().toISOString();
 
             if (window.database) {
-                // 1. スプレッドシート連携用 (お店がIDをチェックできるように書き込み)
                 await window.database.ref('paymentStatuses').push({
                     amount: amount,
                     shopId: scannedData.shopId,
                     customerId: myCustomerId,
                     timestamp: nowIso,
-                    // 【重要】お店側の古いデータと混同させないためにIDを渡す
                     transactionId: scannedData.transactionId 
                 });
 
-                // 2. お店側画面への即時完了通知
                 await window.database.ref('payment_status/' + scannedData.transactionId).set({
                     status: 'completed',
                     userId: myCustomerId,
@@ -193,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // ローカル更新
             balance -= amount;
             localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
             transactions.push({ type: 'payment', amount, shopId: scannedData.shopId, timestamp: nowIso });
@@ -207,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             completedShopIdEl.textContent = scannedData.shopId;
             showSection(paymentCompletionSection);
 
-            // 完了後、2秒で自動的にカメラ再起動
             autoTimer = setTimeout(() => { startQrReader(); }, AUTO_DELAY);
 
         } catch (e) {
