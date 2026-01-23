@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 database.ref('payment_status/' + currentTransactionId).off('value', listener);
                 
                 const li = document.createElement('li');
-                li.innerHTML = `入金: ¥ ${parseInt(amount).toLocaleString()}`;
+                li.innerHTML = `<span>入金: ¥ ${parseInt(amount).toLocaleString()}</span>`;
                 shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild); 
 
                 document.getElementById('receivedAmount').textContent = `¥ ${parseInt(amount).toLocaleString()}`;
