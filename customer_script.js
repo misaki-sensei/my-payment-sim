@@ -1,12 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM要素 ---
+    // --- DOM要素 (一番最初のコードと同じ構成) ---
     const currentBalanceEl = document.getElementById('currentBalance');
     const transactionHistoryEl = document.getElementById('transactionHistory');
     const mainPaymentSection = document.getElementById('mainPaymentSection');
     const qrReaderSection = document.getElementById('qrReaderSection');
     const qrCameraVideo = document.getElementById('qrCameraVideo');
     const qrCanvas = document.getElementById('qrCanvas');
-    
     const scannedAmountEl = document.getElementById('scannedAmount');
     const readAmountDisplay = document.getElementById('readAmountDisplay');
     const confirmPayBtn = document.getElementById('confirmPayBtn');
@@ -15,16 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const chargeAmountInput = document.getElementById('chargeAmountInput');
     const predictedBalanceEl = document.getElementById('predictedBalance');
     const confirmChargeBtn = document.getElementById('confirmChargeBtn');
+    const cancelChargeBtn = document.getElementById('cancelChargeBtn');
 
     const receiveQrSection = document.getElementById('receiveQrSection');
     const receiveQrCodeEl = document.getElementById('receiveQrCode');
     const paymentCompletionSection = document.getElementById('paymentCompletionSection');
     const receiveCompletionSection = document.getElementById('receiveCompletionSection');
 
-    // --- 定数 (初期設定の制限) ---
+    // --- 定数 (一番最初のコードから復元) ---
     const DAILY_CHARGE_LIMIT = 100000;
     const MAX_TOTAL_BALANCE = 100000000;
-    const AUTO_CLOSE_DELAY = 3000;
 
     // --- 変数 ---
     let balance = parseFloat(localStorage.getItem('customerBalance')) || 0;
@@ -37,20 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let myCustomerId = localStorage.getItem('customerMockPayPayId') || `CUST-${Math.floor(Math.random() * 900000) + 100000}`;
     localStorage.setItem('customerMockPayPayId', myCustomerId);
 
-    // 今日以外のチャージ履歴をクリア
+    // チャージ制限用: 今日の履歴のみ保持
     const today = new Date().toDateString();
     dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
 
-    // --- 画面管理 ---
+    // --- 画面管理ロジック ---
     function showSection(target) {
         if (autoCloseTimer) clearTimeout(autoCloseTimer);
-        
-        [mainPaymentSection, qrReaderSection, receiveQrSection, 
-         chargeSection, paymentCompletionSection, receiveCompletionSection].forEach(s => s?.classList.add('hidden'));
-        
+        [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, 
+         paymentCompletionSection, receiveCompletionSection].forEach(s => s?.classList.add('hidden'));
         target?.classList.remove('hidden');
 
-        // メインに戻った時に変数をリセット (連続支払い対応)
+        // メイン画面に戻った際にスキャン情報をリセット (連続支払いをスムーズにするため)
         if (target === mainPaymentSection) {
             scannedData = null;
             readAmountDisplay?.classList.add('hidden');
@@ -65,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `<li><span>${t.type==='payment'?'支払い':'チャージ・受取'}</span><span>¥ ${t.amount.toLocaleString()}</span></li>`).join('');
     }
 
-    // --- カメラ (シンプル版) ---
+    // --- カメラ機能 (一番最初のシンプル版) ---
     function startQrReader() {
         showSection(qrReaderSection);
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(stream => {
@@ -82,8 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qrCanvas.height = qrCameraVideo.videoHeight;
             const ctx = qrCanvas.getContext('2d');
             ctx.drawImage(qrCameraVideo, 0, 0);
-            const imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            const code = jsQR(ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height).data, qrCanvas.width, qrCanvas.height);
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
@@ -107,26 +103,22 @@ document.addEventListener('DOMContentLoaded', () => {
         videoStream = null;
     }
 
-    // --- チャージ処理 (初期ロジック) ---
+    // --- チャージ実行 (一番最初のコードのロジック) ---
     confirmChargeBtn.addEventListener('click', () => {
         const amount = parseInt(chargeAmountInput.value);
         if (!amount || amount <= 0) return alert('金額を入力してください');
-        
         const currentDailyTotal = dailyCharges.reduce((sum, c) => sum + c.amount, 0);
-        if (currentDailyTotal + amount > DAILY_CHARGE_LIMIT) return alert('1日のチャージ上限(10万円)を超えます');
-        if (balance + amount > MAX_TOTAL_BALANCE) return alert('残高上限(1億円)を超えます');
+        if (currentDailyTotal + amount > DAILY_CHARGE_LIMIT) return alert('1日のチャージ上限を超えています');
+        if (balance + amount > MAX_TOTAL_BALANCE) return alert('残高上限を超えます');
 
         balance += amount;
         const now = new Date().toISOString();
         transactions.push({ type: 'charge', amount, timestamp: now });
         dailyCharges.push({ amount, timestamp: now });
-        
         localStorage.setItem('customerBalance', balance);
         localStorage.setItem('customerTransactions', JSON.stringify(transactions));
         localStorage.setItem('customerDailyCharges', JSON.stringify(dailyCharges));
-        
         updateDisplay();
-        alert('チャージ完了');
         showSection(mainPaymentSection);
     });
 
@@ -134,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmPayBtn.addEventListener('click', () => {
         const amount = parseInt(scannedData.amount);
         if (balance < amount) return alert('残高不足');
-        
         balance -= amount;
         transactions.push({ type: 'payment', amount, timestamp: new Date().toISOString() });
         localStorage.setItem('customerBalance', balance);
@@ -170,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         predictedBalanceEl.textContent = (balance + val).toLocaleString();
     });
 
-    // --- お金を受け取った時 (3秒自動クローズ) ---
+    // --- お金を受け取った時の処理 (3秒自動クローズ) ---
     window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
         const data = snapshot.val();
         const amount = parseInt(data.amount);
@@ -178,13 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
         transactions.push({ type: 'charge', amount, timestamp: new Date().toISOString() });
         localStorage.setItem('customerBalance', balance);
         localStorage.setItem('customerTransactions', JSON.stringify(transactions));
-        
         updateDisplay();
         document.getElementById('receivedAmountDisplay').textContent = `¥ ${amount.toLocaleString()}`;
         showSection(receiveCompletionSection);
         snapshot.ref.remove();
-
-        autoCloseTimer = setTimeout(() => showSection(mainPaymentSection), AUTO_CLOSE_DELAY);
+        // ここで3秒タイマー
+        autoCloseTimer = setTimeout(() => showSection(mainPaymentSection), 3000);
     });
 
     updateDisplay();
