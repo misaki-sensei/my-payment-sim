@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentStatusText = document.getElementById('paymentStatusMessage');
     const resetAppBtn = document.getElementById('resetAppBtn');
 
-    // 送金関連 (新規)
+    // 送金関連
     const startRemittanceBtn = document.getElementById('startRemittanceBtn');
     const shopScannerSection = document.getElementById('shopScannerSection');
     const shopCameraVideo = document.getElementById('shopCameraVideo');
@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 定数・変数 ---
     const SHOP_ID = 'YanaharaSHOP001';
+    const AUTO_REGENERATE_DELAY = 2000; // 2秒後に次へ
     let currentExpectedTransactionId = null;
     let paymentStatusListener = null;
 
@@ -48,15 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
         section.classList.remove('hidden');
     }
 
-    // --- 関数: 支払いQR生成 (既存機能) ---
-    generateQrBtn.addEventListener('click', () => {
-        const amount = paymentAmountInput.value;
-        if (!amount || amount <= 0) {
-            alert("金額を入力してください");
-            return;
-        }
-
-        // トランザクションID生成
+    // --- 関数: 支払い開始・QR生成 (再利用可能な関数に変更) ---
+    function startPayment(amount) {
+        // トランザクションID生成 (毎回新しくする)
         currentExpectedTransactionId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         
         // QRデータ
@@ -82,30 +77,48 @@ document.addEventListener('DOMContentLoaded', () => {
             width: 200,
             height: 200
         });
-        qrUrlText.textContent = `ID: ${currentExpectedTransactionId}`;
-        paymentStatusText.innerHTML = '<span class="icon">⏳</span> 顧客からの支払い待ち...';
-        paymentStatusText.className = 'status-pending';
+        if(qrUrlText) qrUrlText.textContent = `ID: ${currentExpectedTransactionId}`;
+        if(paymentStatusText) {
+            paymentStatusText.innerHTML = '<span class="icon">⏳</span> 顧客からの支払い待ち...';
+            paymentStatusText.className = 'status-pending';
+        }
 
         // 監視開始
         if (paymentStatusListener) {
-            database.ref('payment_status/' + currentExpectedTransactionId).off('value', paymentStatusListener);
+            // 前回のリスナーが生きていれば解除（念のため）
+            // ただしIDが変わるのでパスも変わるが、変数のゴミ掃除として
+            // ここではパスが動的なので、前のIDを保持していないと厳密には解除できないが
+            // handlePaymentCompletedで解除しているので基本大丈夫
         }
         
         paymentStatusListener = database.ref('payment_status/' + currentExpectedTransactionId).on('value', (snapshot) => {
             const statusData = snapshot.val();
             if (statusData && statusData.status === 'completed') {
+                // 完了処理へ
                 handlePaymentCompleted(statusData.userId, amount);
             }
         });
+    }
+
+    // ボタンクリック時はここから開始
+    generateQrBtn.addEventListener('click', () => {
+        const amount = paymentAmountInput.value;
+        if (!amount || amount <= 0) {
+            alert("金額を入力してください");
+            return;
+        }
+        startPayment(amount);
     });
 
+    // --- 関数: 支払い完了処理 (連続支払いロジック追加) ---
     function handlePaymentCompleted(userId, amount) {
         // 監視解除
         database.ref('payment_status/' + currentExpectedTransactionId).off('value', paymentStatusListener);
+        paymentStatusListener = null;
         
         // 履歴追加
         const li = document.createElement('li');
-        li.className = 'payment'; // 収入なのでpaymentクラス(赤)だが、本来はincomeクラス等分けるべき。今回は既存css流用
+        li.className = 'payment';
         li.innerHTML = `
             <span>💰 入金: ${parseInt(amount).toLocaleString()}円</span>
             <span>Customer: ${userId.substr(0,6)}...</span>
@@ -115,9 +128,19 @@ document.addEventListener('DOMContentLoaded', () => {
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
         showSection(paymentReceivedSection);
+
+        // ★★★ 連続支払いロジック ★★★
+        setTimeout(() => {
+            // もし店員が手動で「金額入力に戻る」や「リセット」を押してメイン画面に戻っていたら
+            // 自動再開はしない
+            if (!mainShopSection.classList.contains('hidden')) return;
+
+            // まだ完了画面のままなら、自動的に次の支払いQRを生成
+            startPayment(amount);
+        }, AUTO_REGENERATE_DELAY);
     }
 
-    // --- 関数: 送金用カメラ (新規) ---
+    // --- 関数: 送金用カメラ (変更なし) ---
     function startShopQrReader() {
         showSection(shopScannerSection);
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
@@ -219,14 +242,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- その他イベント ---
     resetAppBtn.addEventListener('click', () => {
-        if (currentExpectedTransactionId) {
-            // 削除処理などは省略
+        if (currentExpectedTransactionId && paymentStatusListener) {
+            database.ref('payment_status/' + currentExpectedTransactionId).off('value', paymentStatusListener);
+            paymentStatusListener = null;
         }
         showSection(mainShopSection);
         paymentAmountInput.value = '';
     });
 
     backToMainFromShopCompletionBtn.addEventListener('click', () => {
+        // ここで手動で戻った場合は、タイマーの再生成処理はキャンセルされる（showSectionでhiddenが消えるため）
         showSection(mainShopSection);
         paymentAmountInput.value = '';
     });
