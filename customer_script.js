@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DAILY_CHARGE_LIMIT = 100000; 
     const MAX_TOTAL_BALANCE = 100000000; 
     const AUTO_CLOSE_DELAY = 3000; // 3秒
+    const AUTO_RESCAN_DELAY = 2000; // 2秒
 
     // 変数
     let balance = 0;
@@ -120,6 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- QRカメラ (支払い用) ---
     const startQrReader = () => {
         showSection(qrReaderSection);
+        // 前回読み取った金額などをクリア
+        scannedData = null;
+        readAmountDisplay.classList.add('hidden');
+        confirmPayBtn.classList.add('hidden');
+
         if(cameraStatus) cameraStatus.textContent = 'カメラ起動中...';
 
         if (videoStream) {
@@ -181,27 +187,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- チャージ処理 (★3秒自動クローズ追加) ---
+    // --- チャージ処理 (3秒自動クローズ) ---
     const handleCharge = () => {
         const amount = parseInt(chargeAmountInput.value);
         if (!amount || amount <= 0) return alert('正しい金額を入力してください');
 
         const currentDailyTotal = dailyCharges.reduce((sum, c) => sum + c.amount, 0);
         if (currentDailyTotal + amount > DAILY_CHARGE_LIMIT) {
-            return alert(`1日のチャージ上限は${(DAILY_CHARGE_LIMIT/10000)}万円です。\n本日のチャージ済み: ${currentDailyTotal.toLocaleString()}円`);
+            return alert(`1日のチャージ上限は${(DAILY_CHARGE_LIMIT/10000)}万円です。`);
         }
         if (balance + amount > MAX_TOTAL_BALANCE) {
-            return alert(`残高上限(${MAX_TOTAL_BALANCE/100000000}億円)を超えるためチャージできません。`);
+            return alert(`残高上限を超えるためチャージできません。`);
         }
 
         balance += amount;
         localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
         
         const now = new Date().toISOString();
-        transactions.push({ type: 'charge', amount: amount, timestamp: now });
+        transactions.push({ type: 'charge', amount, timestamp: now });
         localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
         
-        dailyCharges.push({ amount: amount, timestamp: now });
+        dailyCharges.push({ amount, timestamp: now });
         localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
 
         updateBalanceDisplay();
@@ -210,13 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showSection(chargeCompletionSection);
 
-        // ★チャージ完了時、3秒後に自動で閉じる
+        // チャージは3秒後にメインに戻る
         autoCloseTimer = setTimeout(() => {
             showSection(mainPaymentSection);
         }, AUTO_CLOSE_DELAY);
     };
 
-    // --- 支払い処理 ---
+    // --- 支払い処理 (★連続支払い対応) ---
     const handlePayment = () => {
         if (!scannedData) return;
         const amount = parseInt(scannedData.amount);
@@ -225,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         balance -= amount;
         localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
         
-        transactions.push({ type: 'payment', amount: amount, shopId: scannedData.shopId, timestamp: new Date().toISOString() });
+        transactions.push({ type: 'payment', amount, shopId: scannedData.shopId, timestamp: new Date().toISOString() });
         localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
         
         if (window.database && scannedData.transactionId) {
@@ -243,6 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         completedShopIdEl.textContent = scannedData.shopId;
         
         showSection(paymentCompletionSection);
+
+        // ★【追加】支払完了後、2秒で自動的にカメラを再起動して次のスキャンへ
+        autoCloseTimer = setTimeout(() => {
+            startQrReader();
+        }, AUTO_RESCAN_DELAY);
     };
 
     // --- イベント ---
@@ -269,7 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelChargeBtn.addEventListener('click', () => showSection(mainPaymentSection));
     closeReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
     
-    backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
+    backToMainFromCompletionBtn.addEventListener('click', () => {
+        if (autoCloseTimer) clearTimeout(autoCloseTimer); // タイマー解除して手動戻り
+        showSection(mainPaymentSection);
+    });
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     if (backToMainFromReceiveBtn) {
         backToMainFromReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
@@ -285,22 +299,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = snapshot.val();
         const amount = parseInt(data.amount);
         if (amount > 0) {
-            if (balance + amount <= MAX_TOTAL_BALANCE) {
-                balance += amount;
-                localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
-                transactions.push({ type: 'charge', amount: amount, timestamp: new Date().toISOString() });
-                localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
-                
-                updateBalanceDisplay();
-                updateHistoryDisplay();
+            balance += amount;
+            localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
+            transactions.push({ type: 'charge', amount, timestamp: new Date().toISOString() });
+            localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
+            
+            updateBalanceDisplay();
+            updateHistoryDisplay();
 
-                receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
-                showSection(receiveCompletionSection);
+            receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
+            showSection(receiveCompletionSection);
 
-                autoCloseTimer = setTimeout(() => {
-                    showSection(mainPaymentSection);
-                }, AUTO_CLOSE_DELAY);
-            }
+            autoCloseTimer = setTimeout(() => {
+                showSection(mainPaymentSection);
+            }, AUTO_CLOSE_DELAY);
+            
             snapshot.ref.remove();
         }
     });
