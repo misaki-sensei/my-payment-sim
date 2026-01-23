@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // ★修正: 安全な画面切り替え関数（要素が存在しない場合はスキップ）
     const showSection = (target) => {
         if (autoCloseTimer) {
             clearTimeout(autoCloseTimer);
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
 
         allSections.forEach(s => {
-            if (s) s.classList.add('hidden'); // nullチェックを追加
+            if (s) s.classList.add('hidden');
         });
 
         if (target) target.classList.remove('hidden');
@@ -119,34 +118,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- QRカメラ (支払い用) ---
+    // ★修正: 最も基本的な記述に戻しました
     const startQrReader = () => {
         showSection(qrReaderSection);
-        if (cameraStatus) {
-            cameraStatus.textContent = 'カメラ起動中...';
-            cameraStatus.classList.remove('hidden');
-        }
+        if(cameraStatus) cameraStatus.textContent = 'カメラ起動中...';
 
-        qrCameraVideo.setAttribute("playsinline", true); 
-        qrCameraVideo.setAttribute("muted", true); 
-        qrCameraVideo.style.display = 'block';
+        // まず停止
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
 
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
                 videoStream = stream;
                 qrCameraVideo.srcObject = stream;
+                qrCameraVideo.setAttribute("playsinline", true); 
                 qrCameraVideo.play();
                 requestAnimFrameId = requestAnimationFrame(tick);
-                if (cameraStatus) cameraStatus.textContent = '読み取り中...';
+                if(cameraStatus) cameraStatus.textContent = '読み取り中...';
             })
             .catch(err => {
                 console.error("Camera Error:", err);
-                if (cameraStatus) cameraStatus.textContent = 'カメラエラー: ' + err.message;
+                if(cameraStatus) cameraStatus.textContent = 'カメラエラー: ' + err.message;
             });
     };
 
     const tick = () => {
         if (qrCameraVideo.readyState === qrCameraVideo.HAVE_ENOUGH_DATA) {
-            qrCanvas.hidden = false;
             qrCanvas.width = qrCameraVideo.videoWidth;
             qrCanvas.height = qrCameraVideo.videoHeight;
             const ctx = qrCanvas.getContext('2d');
@@ -164,24 +162,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
                         readAmountDisplay.classList.remove('hidden');
                         confirmPayBtn.classList.remove('hidden');
-                        stopQrReader(false);
+                        
+                        // 読み取り成功したらループを止める
+                        cancelAnimationFrame(requestAnimFrameId);
+                        qrCameraVideo.pause();
                         return;
                     }
                 } catch(e) {}
             }
         }
+        // ループ継続
         if (videoStream && videoStream.active) {
             requestAnimFrameId = requestAnimationFrame(tick);
         }
     };
 
-    const stopQrReader = (hideSectionFlag = true) => {
+    const stopQrReader = () => {
         if (requestAnimFrameId) cancelAnimationFrame(requestAnimFrameId);
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
             videoStream = null;
         }
-        qrCameraVideo.style.display = 'none';
     };
 
     // --- チャージ処理 ---
@@ -212,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chargedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         
         showSection(chargeCompletionSection);
-        // チャージ完了時は手動で閉じる
     };
 
     // --- 支払い処理 ---
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         completedShopIdEl.textContent = scannedData.shopId;
         
         showSection(paymentCompletionSection);
-        // 支払い完了時も手動で閉じる
+        // 手動で閉じる
     };
 
     // --- イベント ---
