@@ -31,20 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 定数・変数
     const SHOP_ID = 'YanaharaSHOP001';
-    const AUTO_CLOSE_DELAY = 3000; // ★追加: 3秒後に自動クローズ
     let currentTransactionId = null;
     let listener = null;
     let shopVideoObj = null;
     let targetUserId = null;
-    let autoCloseTimer = null; // タイマー管理用
+    // autoCloseTimer は削除しました（手動で閉じるため）
 
     function showSection(target) {
-        // タイマーがあれば解除
-        if (autoCloseTimer) {
-            clearTimeout(autoCloseTimer);
-            autoCloseTimer = null;
-        }
-
         [mainShopSection, qrDisplaySection, shopScannerSection, remittanceAmountSection, paymentReceivedSection].forEach(s => s.classList.add('hidden'));
         target.classList.remove('hidden');
     }
@@ -75,18 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const li = document.createElement('li');
                 li.innerHTML = `入金: ${amount}円 (${val.userId})`;
-                shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild); // 最新を上に
+                shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild); 
 
                 receivedAmountEl.textContent = `¥ ${amount}`;
                 receivedCustomerInfoEl.textContent = val.userId;
                 
                 showSection(paymentReceivedSection);
 
-                // ★追加: 3秒後に自動でメイン画面に戻す
-                autoCloseTimer = setTimeout(() => {
-                    showSection(mainShopSection);
-                    paymentAmountInput.value = '0'; // 入力リセット
-                }, AUTO_CLOSE_DELAY);
+                // ★修正: 自動で閉じないように変更（連続支払いや確認のため手動で戻る）
             }
         });
     });
@@ -94,6 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 送金カメラ ---
     function startCamera() {
         showSection(shopScannerSection);
+        // カメラ設定: iPhone等対応
+        shopCameraVideo.setAttribute("playsinline", true);
+        shopCameraVideo.setAttribute("muted", true);
+
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(stream => {
             shopVideoObj = stream;
             shopCameraVideo.srcObject = stream;
@@ -154,8 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentAmountInput.value = '0';
     });
     
+    // 手動で戻るボタン
     backToMainFromShopCompletionBtn.addEventListener('click', () => {
         showSection(mainShopSection);
-        paymentAmountInput.value = '0';
+        paymentAmountInput.value = '0'; // 次の支払いのためにリセット
     });
 });
