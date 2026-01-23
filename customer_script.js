@@ -36,13 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const chargedAmountEl = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
+    const receiveCompletionSection = document.getElementById('receiveCompletionSection');
+    const receivedAmountDisplayEl = document.getElementById('receivedAmountDisplay');
+    const backToMainFromReceiveBtn = document.getElementById('backToMainFromReceiveBtn');
+
     // --- 定数 ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
     const DAILY_CHARGE_LIMIT = 100000; 
     const MAX_TOTAL_BALANCE = 100000000; 
-    const AUTO_CLOSE_DELAY = 3000; // ★追加: 3秒後に自動で閉じる
+    const AUTO_CLOSE_DELAY = 3000; // 3秒
 
     // 変数
     let balance = 0;
@@ -50,9 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let dailyCharges = [];
     let scannedData = null;
     let videoStream = null;
-    let qrScanInterval = null;
+    let requestAnimFrameId = null; 
     let myCustomerId = localStorage.getItem('customerMockPayPayId');
-    let autoCloseTimer = null; // ★追加: タイマー管理用
+    let autoCloseTimer = null; 
 
     if (!myCustomerId) {
         myCustomerId = `CUST-${Math.floor(Math.random() * 900000) + 100000}`;
@@ -90,13 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showSection = (target) => {
-        // 既存のタイマーがあればキャンセル（画面遷移でキャンセルされないようにする場合もあるが、今回は安全のため）
         if (autoCloseTimer) {
             clearTimeout(autoCloseTimer);
             autoCloseTimer = null;
         }
         
-        [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, paymentCompletionSection, chargeCompletionSection].forEach(s => s.classList.add('hidden'));
+        [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, paymentCompletionSection, chargeCompletionSection, receiveCompletionSection].forEach(s => s.classList.add('hidden'));
         target.classList.remove('hidden');
     };
 
@@ -106,47 +109,71 @@ document.addEventListener('DOMContentLoaded', () => {
         predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ ---
-    const startQrReader = async () => {
-        cameraStatus.classList.remove('hidden');
+    // --- QRカメラ (支払い用) ---
+    const startQrReader = () => {
+        showSection(qrReaderSection);
         cameraStatus.textContent = 'カメラ起動中...';
+        cameraStatus.classList.remove('hidden');
+
+        qrCameraVideo.setAttribute("playsinline", true); 
+        qrCameraVideo.setAttribute("muted", true); 
         qrCameraVideo.style.display = 'block';
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            qrCameraVideo.srcObject = videoStream;
-            qrCameraVideo.play();
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => {
+                videoStream = stream;
+                qrCameraVideo.srcObject = stream;
+                qrCameraVideo.play();
+                requestAnimFrameId = requestAnimationFrame(tick);
+                cameraStatus.textContent = '読み取り中...';
+            })
+            .catch(err => {
+                console.error("Camera Error:", err);
+                cameraStatus.textContent = 'カメラエラー: ' + err.message;
+            });
+    };
+
+    const tick = () => {
+        if (qrCameraVideo.readyState === qrCameraVideo.HAVE_ENOUGH_DATA) {
+            qrCanvas.hidden = false;
+            qrCanvas.width = qrCameraVideo.videoWidth;
+            qrCanvas.height = qrCameraVideo.videoHeight;
+            const ctx = qrCanvas.getContext('2d');
+            ctx.drawImage(qrCameraVideo, 0, 0, qrCanvas.width, qrCanvas.height);
             
-            qrScanInterval = setInterval(() => {
-                if (qrCameraVideo.videoWidth === 0) return;
-                qrCanvas.width = qrCameraVideo.videoWidth;
-                qrCanvas.height = qrCameraVideo.videoHeight;
-                const ctx = qrCanvas.getContext('2d');
-                ctx.drawImage(qrCameraVideo, 0, 0);
-                const imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-                if (code) {
-                    try {
-                        const data = JSON.parse(code.data);
-                        if (data.amount && data.shopId) {
-                            clearInterval(qrScanInterval);
-                            scannedData = data;
-                            cameraStatus.textContent = '読み取り成功';
-                            scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
-                            readAmountDisplay.classList.remove('hidden');
-                            confirmPayBtn.classList.remove('hidden');
-                        }
-                    } catch(e) {}
-                }
-            }, 100);
-        } catch (e) {
-            cameraStatus.textContent = 'カメラエラー';
+            const imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            
+            if (code) {
+                try {
+                    const data = JSON.parse(code.data);
+                    if (data.amount && data.shopId) {
+                        scannedData = data;
+                        cameraStatus.textContent = '読み取り成功';
+                        scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
+                        readAmountDisplay.classList.remove('hidden');
+                        confirmPayBtn.classList.remove('hidden');
+                        stopQrReader(false);
+                        return;
+                    }
+                } catch(e) {}
+            }
+        }
+        if (videoStream && videoStream.active) {
+            requestAnimFrameId = requestAnimationFrame(tick);
         }
     };
 
-    const stopQrReader = () => {
-        if (qrScanInterval) clearInterval(qrScanInterval);
-        if (videoStream) videoStream.getTracks().forEach(t => t.stop());
+    const stopQrReader = (hideSectionFlag = true) => {
+        if (requestAnimFrameId) cancelAnimationFrame(requestAnimFrameId);
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
         qrCameraVideo.style.display = 'none';
+        if (hideSectionFlag) {
+            // キャンセル等の場合
+        }
     };
 
     // --- チャージ処理 ---
@@ -177,11 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chargedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
         
         showSection(chargeCompletionSection);
-
-        // ★追加: 3秒後に自動でメイン画面へ戻る
-        autoCloseTimer = setTimeout(() => {
-            showSection(mainPaymentSection);
-        }, AUTO_CLOSE_DELAY);
+        // チャージも手動で閉じる（誤操作防止のため）
     };
 
     // --- 支払い処理 ---
@@ -204,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        stopQrReader();
+        stopQrReader(); 
         updateBalanceDisplay();
         updateHistoryDisplay();
         completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
@@ -212,16 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showSection(paymentCompletionSection);
 
-        // ★追加: 3秒後に自動でメイン画面へ戻る
-        autoCloseTimer = setTimeout(() => {
-            showSection(mainPaymentSection);
-        }, AUTO_CLOSE_DELAY);
+        // ★修正: 支払い完了画面は自動で閉じない（手動で戻る）
     };
 
     // --- イベント ---
     loadAppData();
 
-    showQrReaderBtn.addEventListener('click', () => { showSection(qrReaderSection); startQrReader(); });
+    showQrReaderBtn.addEventListener('click', startQrReader); 
     
     showChargeBtn.addEventListener('click', () => { 
         chargeAmountInput.value = ''; 
@@ -242,15 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelChargeBtn.addEventListener('click', () => showSection(mainPaymentSection));
     closeReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
     
-    // 手動で「戻る」ボタンを押した際も即座に戻る（タイマーキャンセル含む）
     backToMainFromCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
     backToMainFromChargeCompletionBtn.addEventListener('click', () => showSection(mainPaymentSection));
+    backToMainFromReceiveBtn.addEventListener('click', () => showSection(mainPaymentSection));
 
     confirmChargeBtn.addEventListener('click', handleCharge);
     confirmPayBtn.addEventListener('click', handlePayment);
 
     chargeAmountInput.addEventListener('input', updatePredictedBalance);
 
+    // --- お金を受け取った時の処理 (Firebase Listener) ---
     window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
         const data = snapshot.val();
         const amount = parseInt(data.amount);
@@ -263,7 +284,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 updateBalanceDisplay();
                 updateHistoryDisplay();
-                alert(`${amount}円を受け取りました！`);
+
+                receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
+                showSection(receiveCompletionSection);
+
+                // ★送金受け取り時のみ、3秒後に自動で閉じる
+                autoCloseTimer = setTimeout(() => {
+                    showSection(mainPaymentSection);
+                }, AUTO_CLOSE_DELAY);
             }
             snapshot.ref.remove();
         }
