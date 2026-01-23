@@ -616,3 +616,81 @@ input[type="text"] {
     color: var(--text-secondary);
     white-space: normal; /* 折り返し可能 */
 }
+/* =========================================
+   ★追加: 送金・受け取り機能用のスタイル
+   ========================================= */
+
+/* 3つのボタン（支払う・チャージ・受け取り）を横並びにするコンテナ */
+.action-buttons {
+    display: flex;
+    gap: 10px; /* ボタン間の隙間 */
+    justify-content: center;
+    flex-wrap: wrap; /* 画面が狭いときは折り返す */
+    margin-bottom: 20px;
+}
+
+.action-buttons button {
+    flex: 1; /* 幅を均等に広げる */
+    min-width: 90px; /* 最小幅 */
+    padding: 12px 5px; /* 内側の余白を少し調整 */
+    font-size: 0.95em; /* 文字サイズ調整 */
+    display: flex;
+    flex-direction: column; /* アイコンと文字を縦に並べるか、横にするか */
+    align-items: center;
+    justify-content: center;
+}
+
+/* スマホ等でボタン内のアイコンとテキストを横並びに戻す調整 */
+.action-buttons button .icon {
+    margin-right: 5px;
+    margin-bottom: 0;
+}
+
+
+/* カメラ表示エリア (Shop/Customer共通) */
+.camera-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 15px auto;
+    background-color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px; /* カメラ起動前の高さ確保 */
+}
+
+.camera-container video {
+    width: 100%;
+    height: auto;
+    object-fit: cover; /* 枠いっぱいに表示 */
+}
+
+/* 受け取り用QRコードの表示エリア */
+.qr-display-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fff; /* 背景白 */
+    border: 2px dashed #e0e0e0; /* 点線枠 */
+    border-radius: 12px;
+}
+
+/* QRコード生成場所の微調整 */
+.qr-code-placeholder {
+    margin-bottom: 15px;
+}
+.qr-code-placeholder img {
+    margin: auto; /* QRコード画像を中央寄せ */
+}
+
+.instruction-text {
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-top: 10px;
+}
