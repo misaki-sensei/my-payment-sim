@@ -61,16 +61,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHistoryItem(newTx);
     }
 
+    // ★修正箇所：時間を一番右に配置するレイアウト
     function renderHistoryItem(t) {
         const li = document.createElement('li');
-        li.style.padding = "12px"; li.style.borderBottom = "1px solid #eee"; li.style.listStyle = "none";
+        li.style.padding = "12px"; 
+        li.style.borderBottom = "1px solid #eee"; 
+        li.style.listStyle = "none";
+        
         const color = t.type === 'income' ? '#28a745' : '#ff9800';
+        const label = t.type === 'income' ? '💰入金' : '💸送金';
+
         li.innerHTML = `
-            <div style="display:flex; justify-content:space-between;">
-                <strong style="color:${color}">${t.type==='income'?'💰入金':'💸送金'}: ¥${Math.abs(parseInt(t.amount)).toLocaleString()}</strong>
-                <span style="font-size:0.8em; color:#888;">${t.time}</span>
+            <div style="display:flex; justify-content:space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <strong style="color:${color}">${label}: ¥${Math.abs(parseInt(t.amount)).toLocaleString()}</strong>
+                    <div style="font-size:0.8em; color:#666; margin-top: 4px;">ID: ${t.userId}</div>
+                </div>
+                <div style="font-size:0.8em; color:#888; white-space: nowrap; margin-left: 10px;">
+                    ${t.time}
+                </div>
             </div>
-            <div style="font-size:0.8em; color:#666;">ID: ${t.userId}</div>
         `;
         if (shopTransactionHistoryEl) shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
     }
