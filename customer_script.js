@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainPaymentSection = document.getElementById('mainPaymentSection');
     const showQrReaderBtn = document.getElementById('showQrReaderBtn');
     const showChargeBtn = document.getElementById('showChargeBtn');
-    // ★追加
     const showReceiveBtn = document.getElementById('showReceiveBtn');
 
     const qrReaderSection = document.getElementById('qrReaderSection');
@@ -18,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmPayBtn = document.getElementById('confirmPayBtn');
     const cancelQrReadBtn = document.getElementById('cancelQrReadBtn');
 
-    // ★追加: 受け取りセクション
+    // 受け取りセクション
     const receiveQrSection = document.getElementById('receiveQrSection');
     const receiveQrCodeEl = document.getElementById('receiveQrCode');
     const closeReceiveBtn = document.getElementById('closeReceiveBtn');
@@ -37,12 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const chargedAmountEl = document.getElementById('chargedAmount');
     const backToMainFromChargeCompletionBtn = document.getElementById('backToMainFromChargeCompletionBtn');
 
-    // --- 定数（元のファイルの設定を維持） ---
+    // --- 定数 ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
-    const DAILY_CHARGE_LIMIT = 100000; // 1日10万円
-    const MAX_TOTAL_BALANCE = 100000000; // 最大1億円
+    const DAILY_CHARGE_LIMIT = 100000; 
+    const MAX_TOTAL_BALANCE = 100000000; 
 
     // 変数
     let balance = 0;
@@ -58,13 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('customerMockPayPayId', myCustomerId);
     }
 
-    // --- 初期化 ---
+    // --- 関数 ---
     const loadAppData = () => {
         balance = parseFloat(localStorage.getItem(LOCAL_STORAGE_BALANCE_KEY)) || 0;
         transactions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_TRANSACTIONS_KEY)) || [];
         dailyCharges = JSON.parse(localStorage.getItem(LOCAL_STORAGE_DAILY_CHARGE_KEY)) || [];
         
-        // 日付が変わったらチャージ履歴リセット
         const today = new Date().toDateString();
         dailyCharges = dailyCharges.filter(c => new Date(c.timestamp).toDateString() === today);
         localStorage.setItem(LOCAL_STORAGE_DAILY_CHARGE_KEY, JSON.stringify(dailyCharges));
@@ -79,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateHistoryDisplay = () => {
         transactionHistoryEl.innerHTML = '';
-        const displayList = transactions.slice().reverse(); // 新しい順
+        const displayList = transactions.slice().reverse();
         displayList.forEach(t => {
             const li = document.createElement('li');
             li.className = t.type;
@@ -92,6 +90,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const showSection = (target) => {
         [mainPaymentSection, qrReaderSection, receiveQrSection, chargeSection, paymentCompletionSection, chargeCompletionSection].forEach(s => s.classList.add('hidden'));
         target.classList.remove('hidden');
+    };
+
+    // 予測残高の計算・表示更新
+    const updatePredictedBalance = () => {
+        const val = parseInt(chargeAmountInput.value);
+        // 入力が空または不正な場合は0として計算
+        const addAmount = isNaN(val) ? 0 : val;
+        predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
     // --- QRカメラ (支払い用) ---
@@ -137,12 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCameraVideo.style.display = 'none';
     };
 
-    // --- チャージ処理 (上限設定あり) ---
+    // --- チャージ処理 ---
     const handleCharge = () => {
         const amount = parseInt(chargeAmountInput.value);
         if (!amount || amount <= 0) return alert('正しい金額を入力してください');
 
-        // 上限チェック
         const currentDailyTotal = dailyCharges.reduce((sum, c) => sum + c.amount, 0);
         if (currentDailyTotal + amount > DAILY_CHARGE_LIMIT) {
             return alert(`1日のチャージ上限は${(DAILY_CHARGE_LIMIT/10000)}万円です。\n本日のチャージ済み: ${currentDailyTotal.toLocaleString()}円`);
@@ -151,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert(`残高上限(${MAX_TOTAL_BALANCE/100000000}億円)を超えるためチャージできません。`);
         }
 
-        // 実行
         balance += amount;
         localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
         
@@ -180,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         transactions.push({ type: 'payment', amount: amount, shopId: scannedData.shopId, timestamp: new Date().toISOString() });
         localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
         
-        // Firebase通知
         if (window.database && scannedData.transactionId) {
              window.database.ref('payment_status/' + scannedData.transactionId).set({
                 status: 'completed',
@@ -201,9 +204,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAppData();
 
     showQrReaderBtn.addEventListener('click', () => { showSection(qrReaderSection); startQrReader(); });
-    showChargeBtn.addEventListener('click', () => { chargeAmountInput.value = ''; showSection(chargeSection); });
     
-    // ★追加: 受け取りボタン
+    // ★修正: チャージボタンを押した際、入力と予測残高表示をリセットする
+    showChargeBtn.addEventListener('click', () => { 
+        chargeAmountInput.value = ''; // 入力を空にする
+        updatePredictedBalance();     // 予測残高を「現在の残高」のみの表示に戻す
+        showSection(chargeSection); 
+    });
+    
     showReceiveBtn.addEventListener('click', () => {
         showSection(receiveQrSection);
         receiveQrCodeEl.innerHTML = '';
@@ -222,22 +230,17 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmChargeBtn.addEventListener('click', handleCharge);
     confirmPayBtn.addEventListener('click', handlePayment);
 
-    chargeAmountInput.addEventListener('input', () => {
-        const val = parseInt(chargeAmountInput.value) || 0;
-        predictedBalanceEl.textContent = (balance + val).toLocaleString();
-    });
+    // 入力があるたびに予測残高を更新
+    chargeAmountInput.addEventListener('input', updatePredictedBalance);
 
-    // ★追加: 送金監視
     window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
         const data = snapshot.val();
         const amount = parseInt(data.amount);
         if (amount > 0) {
-            // 送金受け取りはチャージ上限(10万円)の対象外とするのが一般的だが、
-            // 残高上限(1億円)チェックは入れる
             if (balance + amount <= MAX_TOTAL_BALANCE) {
                 balance += amount;
                 localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
-                transactions.push({ type: 'charge', amount: amount, timestamp: new Date().toISOString() }); // 履歴上はチャージ扱い
+                transactions.push({ type: 'charge', amount: amount, timestamp: new Date().toISOString() });
                 localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
                 
                 updateBalanceDisplay();
