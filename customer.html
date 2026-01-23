@@ -8,8 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <script type="text/javascript" src="qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
@@ -19,58 +17,59 @@
             databaseURL: "https://my-paypay-sim-45735-default-rtdb.firebaseio.com/",
             projectId: "my-paypay-sim-45735",
             storageBucket: "my-paypay-sim-45735.firebasestorage.app",
-            messagingSenderId: "367984856012",
-            appId: "1:367984856012:web:15842c3855502758b90709"
+            messagingSenderId: "310980051016",
+            appId: "1:310980051016:web:38083c1005b783054b587d"
         };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        window.database = firebase.database(); 
     </script>
-    <script src="customer_script.js" defer></script>
 </head>
 <body>
-    <div class="container" id="appContainer">
-        <header class="header">
-            <h1 class="app-title">PosiPay</h1>
-            <p class="shop-name">お客さま用アプリ</p>
-        </header>
 
-        <div id="mainPaymentSection" class="section">
-            <div class="balance-section card">
-                <p class="balance-label">残高</p>
-                <p class="balance">¥ <span id="currentBalance">0</span></p>
-            </div>
-
-            <div class="action-section">
-                <div class="buttons">
-                    <button id="showQrReaderBtn" class="action-btn pay-btn">
-                        <span class="icon">📷</span> 支払う
-                    </button>
-                    <button id="showChargeBtn" class="action-btn charge-toggle-btn">
-                        <span class="icon">¥</span> チャージ
-                    </button>
-                    <button id="showReceiveBtn" class="action-btn toggle-btn">
-                        <span class="icon">📥</span> 受け取る
-                    </button>
-                </div>
-            </div>
+    <div class="container app-container" id="appContainer">
+        <div class="header">
+            <h1 class="app-title">お客アプリ</h1>
         </div>
 
-        <div id="qrReaderSection" class="section hidden card">
-            <h2 class="section-title">QRコードを読み取る</h2>
-            <div class="qr-camera-area">
-                <video id="qrCameraVideo" class="qr-camera-video" playsinline="true"></video>
-                <canvas id="qrCanvas"></canvas>
-                <div class="camera-status" id="cameraStatus">カメラ起動中...</div>
-                <div class="scan-line"></div>
-            </div>
-            <p class="qr-instruction">店舗のQRコードを枠内に映してください</p>
-            
-            <div id="readAmountDisplay" class="read-amount-display hidden">
-                読み取り金額: <span id="scannedAmount">0</span> 円
-            </div>
+        <div class="balance-section card">
+            <p class="balance-label">現在の残高</p>
+            <p class="balance" id="currentBalance">¥ 0</p>
+        </div>
 
-            <button id="confirmPayBtn" class="primary-btn hidden" style="margin-top:10px;">支払う</button>
-            <button id="cancelQrReadBtn" class="secondary-btn" style="margin-top:10px;">キャンセル</button>
+        <div class="main-payment-section" id="mainPaymentSection">
+            <p class="section-description">店舗のQRコードを読み取って決済します</p>
+            <button id="showQrReaderBtn" class="action-btn primary-btn large-btn">
+                <span class="icon">📸</span> 店舗QRコードを読み取る
+            </button>
+            <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
+                <span class="icon">➕</span> チャージする
+            </button>
+            <button id="showReceiveBtn" class="action-btn toggle-btn large-btn" style="margin-top: 15px;">
+                <span class="icon">📥</span> お金を受け取る
+            </button>
+        </div>
+
+        <div class="qr-reader-section hidden" id="qrReaderSection">
+            <h2 class="section-title">QRコード読み取り</h2>
+            <div class="card">
+                <p class="qr-instruction">
+                    店舗のQRコードをカメラにかざしてください。
+                </p>
+                <div class="qr-camera-container">
+                    <video id="qrCameraVideo" class="qr-camera-video" autoplay playsinline></video>
+                    <canvas id="qrCanvas" class="qr-camera-area"></canvas>
+                </div>
+                <p class="camera-status" id="cameraStatus">カメラを起動中...</p>
+                
+                <p class="read-amount-display hidden" id="readAmountDisplay">
+                    支払金額: <span id="scannedAmount">¥ 0</span>
+                </p>
+
+                <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">
+                    <span class="icon">💸</span> 支払いを確定する
+                </button>
+                <button id="cancelQrReadBtn" class="secondary-btn" style="margin-top: 15px;">キャンセル</button>
+            </div>
         </div>
 
         <div id="receiveQrSection" class="section hidden card">
@@ -79,20 +78,24 @@
                 <div id="receiveQrCode" class="qr-code-placeholder"></div>
                 <p class="instruction-text">お店の人に読み取ってもらってください</p>
             </div>
-            <button id="closeReceiveBtn" class="secondary-btn">戻る</button>
+            <button id="closeReceiveBtn" class="secondary-btn large-btn">戻る</button>
         </div>
 
-        <div id="chargeSection" class="section hidden card">
+        <div class="charge-section hidden" id="chargeSection">
             <h2 class="section-title">残高チャージ</h2>
-            <div class="input-group">
-                <label>チャージ金額</label>
-                <input type="number" id="chargeAmountInput" placeholder="1000" inputmode="numeric">
+            <div class="card">
+                <div class="input-group">
+                    <label for="chargeAmountInput">チャージ金額 (¥)</label>
+                    <input type="number" id="chargeAmountInput" placeholder="金額を入力" inputmode="numeric">
+                </div>
+                <div class="predicted-balance-display" id="predictedBalanceDisplay">
+                    チャージ後の残高: ¥ <span id="predictedBalance">0</span>
+                </div>
+                <button id="confirmChargeBtn" class="action-btn charge-toggle-btn">
+                    <span class="icon">💳</span> チャージ実行
+                </button>
+                <button id="cancelChargeBtn" class="secondary-btn" style="margin-top: 15px;">キャンセル</button>
             </div>
-            <div class="predicted-balance-display">
-                チャージ後残高: ¥ <span id="predictedBalance">0</span>
-            </div>
-            <button id="confirmChargeBtn" class="primary-btn">チャージする</button>
-            <button id="cancelChargeBtn" class="secondary-btn" style="margin-top:10px;">キャンセル</button>
         </div>
 
         <div class="payment-completion-section hidden" id="paymentCompletionSection">
@@ -117,9 +120,12 @@
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">取引履歴</h2>
+            <h2 class="section-title">支払い完了履歴</h2>
             <ul id="transactionHistory"></ul>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="customer_script.js"></script>
 </body>
 </html>
