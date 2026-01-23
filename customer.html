@@ -54,16 +54,12 @@
         <div class="qr-reader-section hidden" id="qrReaderSection">
             <h2 class="section-title">QRコード読み取り</h2>
             <div class="card">
-                <p class="qr-instruction">
-                    店舗のQRコードをカメラにかざしてください。
-                </p>
-                <div class="qr-camera-area">
-                    <video id="qrCameraVideo" class="qr-camera-video" autoplay playsinline muted></video>
-                    <canvas id="qrCanvas"></canvas>
-                    <div class="camera-status" id="cameraStatus">カメラを起動中...</div>
-                    <div class="scan-line"></div>
-                </div>
+                <p class="qr-instruction">店舗のQRコードを映してください</p>
                 
+                <video id="qrCameraVideo" autoplay playsinline muted style="width: 100%; border-radius: 8px;"></video>
+                <canvas id="qrCanvas" style="display:none;"></canvas>
+                <div id="cameraStatus" style="text-align:center; margin-top:10px; color:#666;">カメラ起動中...</div>
+
                 <p class="read-amount-display hidden" id="readAmountDisplay">
                     支払金額: <span id="scannedAmount">¥ 0</span>
                 </p>
