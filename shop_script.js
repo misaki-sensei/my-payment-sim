@@ -1,32 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM要素 ---
-    const mainShopSection = document.getElementById('mainShopSection');
-    const paymentAmountInput = document.getElementById('paymentAmount');
-    const generateQrBtn = document.getElementById('generateQrBtn');
+    // --- DOM要素の取得（IDが違っても探せるように予備を準備） ---
+    const getEl = (id) => document.getElementById(id);
+
+    const mainShopSection = getEl('mainShopSection');
+    const paymentAmountInput = getEl('paymentAmount');
+    const generateQrBtn = getEl('generateQrBtn');
     
-    // 送金開始ボタン（HTML側のIDがこれであることを確認してください）
-    const startShopScannerBtn = document.getElementById('showShopScannerBtn') || document.getElementById('startShopScannerBtn');
+    // 送金開始ボタン：複数の可能性のあるIDすべてに対応
+    const startShopScannerBtn = getEl('showShopScannerBtn') || getEl('startShopScannerBtn') || getEl('btnStartScanner');
 
-    const qrDisplaySection = document.getElementById('qrDisplaySection');
-    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
-    const resetAppBtn = document.getElementById('resetAppBtn');
+    const qrDisplaySection = getEl('qrDisplaySection');
+    const qrCodeCanvas = getEl('qrCodeCanvas');
+    const resetAppBtn = getEl('resetAppBtn');
 
-    const shopScannerSection = document.getElementById('shopScannerSection');
-    const shopCameraVideo = document.getElementById('shopCameraVideo');
-    const shopQrCanvas = document.getElementById('shopQrCanvas');
-    const cancelRemittanceBtn = document.getElementById('cancelRemittanceBtn');
+    const shopScannerSection = getEl('shopScannerSection');
+    const shopCameraVideo = getEl('shopCameraVideo');
+    const shopQrCanvas = getEl('shopQrCanvas');
+    const cancelRemittanceBtn = getEl('cancelRemittanceBtn');
     
-    const remittanceAmountSection = document.getElementById('remittanceAmountSection');
-    const targetUserIdDisplay = document.getElementById('targetUserIdDisplay');
-    const remittanceAmountInput = document.getElementById('remittanceAmountInput');
-    const confirmRemittanceBtn = document.getElementById('confirmRemittanceBtn');
+    const remittanceAmountSection = getEl('remittanceAmountSection');
+    const targetUserIdDisplay = getEl('targetUserIdDisplay');
+    const remittanceAmountInput = getEl('remittanceAmountInput');
+    const confirmRemittanceBtn = getEl('confirmRemittanceBtn');
 
-    const paymentReceivedSection = document.getElementById('paymentReceivedSection');
-    const receivedAmountEl = document.getElementById('receivedAmount');
-    const receivedCustomerInfoEl = document.getElementById('receivedCustomerInfo');
-    const backToMainFromShopCompletionBtn = document.getElementById('backToMainFromShopCompletionBtn');
+    const paymentReceivedSection = getEl('paymentReceivedSection');
+    const receivedAmountEl = getEl('receivedAmount');
+    const receivedCustomerInfoEl = getEl('receivedCustomerInfo');
+    const backToMainFromShopCompletionBtn = getEl('backToMainFromShopCompletionBtn');
 
-    const shopTransactionHistoryEl = document.getElementById('shopTransactionHistory');
+    const shopTransactionHistoryEl = getEl('shopTransactionHistory');
 
     // --- 定数・変数 ---
     const SHOP_ID = 'YanaharaSHOP001';
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoTimer = null;
     let transactions = [];
 
-    // --- 履歴管理 ---
+    // --- 履歴管理関数 ---
     function loadHistory() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -58,30 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderHistoryItem(t) {
         const li = document.createElement('li');
-        li.style.padding = "12px"; li.style.borderBottom = "1px solid #eee"; li.style.listStyle = "none";
+        li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee";
         const color = t.type === 'income' ? '#28a745' : '#dc3545';
-        li.innerHTML = `
-            <div style="display:flex; justify-content:space-between;">
-                <strong style="color:${color}">${t.type==='income'?'💰入金':'💸送金'}: ¥${parseInt(t.amount).toLocaleString()}</strong>
-                <span style="font-size:0.8em; color:#888;">${t.time}</span>
-            </div>
-            <div style="font-size:0.8em; color:#666;">ID: ${t.userId}</div>
-        `;
-        shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
+        li.innerHTML = `<strong style="color:${color}">${t.type==='income'?'💰入金':'💸送金'}: ¥${parseInt(t.amount).toLocaleString()}</strong> <small>${t.time}</small>`;
+        if (shopTransactionHistoryEl) shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
     }
 
     function showSection(section) {
         if (autoTimer) clearTimeout(autoTimer);
-        const allSections = [mainShopSection, qrDisplaySection, shopScannerSection, remittanceAmountSection, paymentReceivedSection];
-        allSections.forEach(sec => { if (sec) sec.classList.add('hidden'); });
+        [mainShopSection, qrDisplaySection, shopScannerSection, remittanceAmountSection, paymentReceivedSection].forEach(sec => { if (sec) sec.classList.add('hidden'); });
         if (section) section.classList.remove('hidden');
     }
 
-    // --- 支払い受付処理 (連続支払い対応) ---
+    // --- 支払い受付処理（連続支払い） ---
     function startPayment(amount) {
-        if (autoTimer) clearTimeout(autoTimer);
-        
-        // 毎回新しいTransactionIDを発行して古いデータと区別する
         currentExpectedTransactionId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const qrData = JSON.stringify({ shopId: SHOP_ID, amount: amount, transactionId: currentExpectedTransactionId });
 
@@ -89,14 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCodeCanvas.innerHTML = '';
         new QRCode(qrCodeCanvas, { text: qrData, width: 200, height: 200 });
         
-        // 監視のリセット
         database.ref('paymentStatuses').off();
-
-        // 監視開始
         database.ref('paymentStatuses').on('child_added', (snapshot) => {
             const data = snapshot.val();
             if (data && data.transactionId === currentExpectedTransactionId) {
-                database.ref('paymentStatuses').off(); // 検知したら即解除
+                database.ref('paymentStatuses').off();
                 handlePaymentCompleted(data.customerId || 'Unknown', amount);
             }
         });
@@ -107,25 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
         showSection(paymentReceivedSection);
-
-        // ★2秒後に自動で同じ金額のQR表示に戻る（連続支払いループ）
-        autoTimer = setTimeout(() => { 
-            startPayment(amount); 
-        }, AUTO_DELAY);
+        autoTimer = setTimeout(() => { startPayment(amount); }, AUTO_DELAY);
     }
 
-    // --- 送金カメラ処理 (★ここが修正ポイント) ---
+    // --- 送金カメラ処理 ---
     function startShopQrReader() {
+        console.log("カメラ起動を試みます...");
         showSection(shopScannerSection);
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
                 shopVideoObj = stream;
                 shopCameraVideo.srcObject = stream;
-                shopCameraVideo.setAttribute("playsinline", true);
                 shopCameraVideo.play();
                 requestAnimationFrame(tickShopQr);
             })
-            .catch(err => alert("カメラを起動できません: " + err));
+            .catch(err => {
+                alert("カメラ起動エラー: " + err.name);
+                showSection(mainShopSection);
+            });
     }
 
     function tickShopQr() {
@@ -147,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         showSection(remittanceAmountSection);
                         return;
                     }
-                } catch(e) { /* JSONでないQRは無視 */ }
+                } catch(e) {}
             }
         }
         if (shopVideoObj) requestAnimationFrame(tickShopQr);
@@ -160,46 +148,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- ボタンイベント登録 ---
-    
-    // 入金QR作成
-    generateQrBtn.onclick = () => {
-        const amount = paymentAmountInput.value;
-        if (amount > 0) startPayment(amount);
-        else alert("金額を入力してください");
-    };
+    // --- ボタンイベントの割り当て ---
 
-    // 送金スキャン開始 (HTMLのボタンIDに合わせて設定)
+    // 入金QRボタン
+    if (generateQrBtn) {
+        generateQrBtn.onclick = () => {
+            const amount = paymentAmountInput.value;
+            if (amount > 0) startPayment(amount);
+            else alert("金額を入力してください");
+        };
+    }
+
+    // 送金開始ボタン（ここが重要！）
     if (startShopScannerBtn) {
-        startShopScannerBtn.onclick = () => startShopQrReader();
+        startShopScannerBtn.onclick = () => {
+            console.log("送金ボタンがクリックされました");
+            startShopQrReader();
+        };
+    } else {
+        console.error("送金開始ボタンが見つかりません。IDを確認してください。");
     }
 
     // 送金実行ボタン
-    confirmRemittanceBtn.onclick = async () => {
-        const amount = parseInt(remittanceAmountInput.value);
-        if (!amount || amount <= 0) return alert("金額を入力してください");
-        
-        try {
-            const now = new Date().toISOString();
-            // 1. スプレッドシート連携用(マイナス表記)
-            await database.ref('paymentStatuses').push({
-                amount: -amount, shopId: SHOP_ID, customerId: targetUserId, timestamp: now, transactionId: 'remit_' + Date.now()
-            });
-            // 2. 相手への送金
-            await database.ref('remittances/' + targetUserId).push({ 
-                amount: amount, shopId: SHOP_ID, timestamp: now 
-            });
+    if (confirmRemittanceBtn) {
+        confirmRemittanceBtn.onclick = async () => {
+            const amount = parseInt(remittanceAmountInput.value);
+            if (!amount || amount <= 0) return alert("金額を入力");
+            try {
+                const now = new Date().toISOString();
+                await database.ref('paymentStatuses').push({
+                    amount: -amount, shopId: SHOP_ID, customerId: targetUserId, timestamp: now, transactionId: 'remit_' + Date.now()
+                });
+                await database.ref('remittances/' + targetUserId).push({ 
+                    amount: amount, shopId: SHOP_ID, timestamp: now 
+                });
+                saveAndRender('outgo', amount, targetUserId);
+                alert("送金完了しました");
+                showSection(mainShopSection);
+            } catch (e) { alert("送金失敗: " + e.message); }
+        };
+    }
 
-            saveAndRender('outgo', amount, targetUserId);
-            alert("送金完了しました");
-            showSection(mainShopSection);
-        } catch (e) { alert("エラー: " + e.message); }
-    };
-
-    // リセット・戻るボタン
-    resetAppBtn.onclick = () => { database.ref('paymentStatuses').off(); showSection(mainShopSection); };
-    backToMainFromShopCompletionBtn.onclick = () => { database.ref('paymentStatuses').off(); showSection(mainShopSection); };
-    cancelRemittanceBtn.onclick = () => { stopCamera(); showSection(mainShopSection); };
+    // キャンセル・戻る系
+    if (resetAppBtn) resetAppBtn.onclick = () => showSection(mainShopSection);
+    if (backToMainFromShopCompletionBtn) backToMainFromShopCompletionBtn.onclick = () => showSection(mainShopSection);
+    if (cancelRemittanceBtn) cancelRemittanceBtn.onclick = () => { stopCamera(); showSection(mainShopSection); };
 
     loadHistory();
 });
