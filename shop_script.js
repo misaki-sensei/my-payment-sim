@@ -37,13 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoTimer = null;
     let transactions = [];
 
+    // --- 【追加】リセット関数：全ての入力欄を0にする ---
+    const resetAllInputs = () => {
+        if (paymentAmountInput) paymentAmountInput.value = "";
+        if (remittanceAmountInput) remittanceAmountInput.value = "";
+    };
+
     // --- 入力値のブロック制限 (100万上限) ---
     const blockOverMillion = (inputEl) => {
         let lastValidValue = inputEl.value;
         inputEl.addEventListener('input', () => {
             const val = parseInt(inputEl.value);
             if (val > 1000000) {
-                inputEl.value = lastValidValue; // 100万を超えたら前の値に強制固定
+                inputEl.value = lastValidValue; 
             } else {
                 lastValidValue = inputEl.value;
             }
@@ -102,6 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(qrDisplaySection);
         qrCodeCanvas.innerHTML = '';
         new QRCode(qrCodeCanvas, { text: qrData, width: 200, height: 200 });
+
+        // 【修正】QR生成後、入力欄をリセット（次の入力のために）
+        paymentAmountInput.value = "";
+
         database.ref('paymentStatuses').off();
         database.ref('paymentStatuses').on('child_added', (snapshot) => {
             const data = snapshot.val();
@@ -117,11 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
         showSection(paymentReceivedSection);
-        autoTimer = setTimeout(() => { startPayment(amount); }, AUTO_DELAY);
+        autoTimer = setTimeout(() => { 
+            // 次の支払いのためにメインへ
+            showSection(mainShopSection);
+        }, AUTO_DELAY);
     }
 
     // --- カメラ処理 ---
     function startShopQrReader() {
+        // 【修正】読み取り開始時に金額をリセット
+        resetAllInputs(); 
         showSection(shopScannerSection);
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
@@ -148,6 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         stopCamera();
                         targetUserId = data.userId;
                         targetUserIdDisplay.textContent = targetUserId;
+                        
+                        // 【追加】読み取り成功後、金額入力を空にしてから表示
+                        remittanceAmountInput.value = "";
                         showSection(remittanceAmountSection);
                         return;
                     }
@@ -185,15 +203,41 @@ document.addEventListener('DOMContentLoaded', () => {
             saveAndRender('outgo', amount, targetUserId);
             sentAmountDisplay.textContent = `¥ ${amount.toLocaleString()}`;
             sentToUserDisplay.textContent = `宛先: ${targetUserId}`;
+            
+            // 【修正】送金確定後、入力をクリア
+            resetAllInputs();
+            
             showSection(remittanceCompletionSection);
             autoTimer = setTimeout(() => { showSection(mainShopSection); }, REMIT_DELAY);
         } catch (e) { alert("エラーが発生しました"); }
     };
 
-    backToScanBtn.onclick = () => startShopQrReader();
-    cancelRemittanceBtn.onclick = () => { stopCamera(); showSection(mainShopSection); };
-    resetAppBtn.onclick = () => { database.ref('paymentStatuses').off(); showSection(mainShopSection); };
-    backToMainFromShopCompletionBtn.onclick = () => showSection(mainShopSection);
-    backToMainFromRemittanceBtn.onclick = () => showSection(mainShopSection);
+    backToScanBtn.onclick = () => {
+        resetAllInputs(); // 【追加】戻るときもリセット
+        startShopQrReader();
+    };
+    
+    cancelRemittanceBtn.onclick = () => { 
+        stopCamera(); 
+        resetAllInputs(); // 【追加】キャンセル時もリセット
+        showSection(mainShopSection); 
+    };
+    
+    resetAppBtn.onclick = () => { 
+        database.ref('paymentStatuses').off(); 
+        resetAllInputs(); // 【追加】リセット時
+        showSection(mainShopSection); 
+    };
+
+    backToMainFromShopCompletionBtn.onclick = () => {
+        resetAllInputs();
+        showSection(mainShopSection);
+    };
+
+    backToMainFromRemittanceBtn.onclick = () => {
+        resetAllInputs();
+        showSection(mainShopSection);
+    };
+
     loadHistory();
 });
