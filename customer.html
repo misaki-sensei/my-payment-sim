@@ -40,11 +40,11 @@
             </div>
 
             <button id="showQrReaderBtn" class="action-btn pay-btn large-btn">
-                <span class="icon">📷</span> QRコードを読み取る
+                <span class="icon">📷</span> 支払う (QRスキャン)
             </button>
             
             <button id="showReceiveBtn" class="action-btn toggle-btn large-btn" style="margin-top:10px;">
-                <span class="icon">💰</span> お金を受け取る
+                <span class="icon">💰</span> 受け取る (QR表示)
             </button>
 
             <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
@@ -81,7 +81,7 @@
         <div id="chargeSection" class="section hidden">
             <h2 class="section-title">チャージ</h2>
             <div class="input-group">
-                <label>チャージ金額</label>
+                <label>チャージ金額 (上限100万円)</label>
                 <input type="number" id="chargeAmountInput" placeholder="金額を入力" inputmode="numeric">
             </div>
             <div id="predictedBalanceDisplay" class="predicted-balance-display">
@@ -103,7 +103,7 @@
             <button id="backToMainFromCompletionBtn" class="primary-btn">メインに戻る</button>
         </div>
 
-        <div class="charge-completion-section hidden" id="chargeCompletionSection">
+        <div id="chargeCompletionSection" class="section hidden">
             <div class="completion-card card">
                 <div class="completion-icon">➕</div>
                 <p class="completion-message">チャージ完了</p>
@@ -112,7 +112,7 @@
             <button id="backToMainFromChargeCompletionBtn" class="primary-btn">メインに戻る</button>
         </div>
 
-        <div class="receive-completion-section hidden" id="receiveCompletionSection">
+        <div id="receiveCompletionSection" class="section hidden">
             <div class="completion-card card">
                 <div class="completion-icon" style="color: #ff9800;">💰</div>
                 <p class="completion-message">受け取り完了</p>
