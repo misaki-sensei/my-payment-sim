@@ -35,7 +35,7 @@
             <h2 class="section-title">支払い金額設定</h2>
             <div class="input-group">
                 <label for="paymentAmount">金額:</label>
-                <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" max="1000000" value="0">
+                <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" max="1000000">
             </div>
             <button id="generateQrBtn" class="primary-btn">
                 <span class="icon">🔗</span> QRコードを表示
@@ -68,7 +68,9 @@
                 <video id="shopCameraVideo" playsinline></video>
                 <canvas id="shopQrCanvas" hidden></canvas>
             </div>
-            <p>お客様の「受け取りQR」を映してください</p>
+            <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 10px 0; font-size: 14px; font-weight: bold;">
+                お客様の「受け取りQR」を映してください
+            </p>
             <button id="cancelRemittanceBtn" class="secondary-btn">キャンセル</button>
         </div>
 
