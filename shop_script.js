@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 修正：日時を秒まで含めたフル形式にする
+    // 履歴保存（日時を秒まで含めたフル形式にする）
     function saveAndRender(type, amount, userId) {
         const now = new Date();
         const timeStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHistoryItem(newTx);
     }
 
-    // 修正：日時を一番右に配置するレイアウト
+    // 履歴表示（日時を右端に配置）
     function renderHistoryItem(t) {
         const li = document.createElement('li');
         li.style.padding = "12px"; 
@@ -87,6 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         if (shopTransactionHistoryEl) shopTransactionHistoryEl.insertBefore(li, shopTransactionHistoryEl.firstChild);
     }
+
+    // --- 入力値のリアルタイム制限（100万上限） ---
+    const capAtOneMillion = (inputEl) => {
+        inputEl.addEventListener('input', () => {
+            if (parseInt(inputEl.value) > 1000000) {
+                inputEl.value = 1000000;
+            }
+        });
+    };
+    capAtOneMillion(paymentAmountInput);
+    capAtOneMillion(remittanceAmountInput);
 
     function showSection(section) {
         if (autoTimer) clearTimeout(autoTimer);
@@ -170,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- イベントリスナー ---
     generateQrBtn.onclick = () => {
         let amount = parseInt(paymentAmountInput.value);
-        // 上限1,000,000円の補正
         if (amount > 1000000) amount = 1000000;
         paymentAmountInput.value = amount;
 
@@ -184,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     confirmRemittanceBtn.onclick = async () => {
         let amount = parseInt(remittanceAmountInput.value);
-        // 上限1,000,000円の補正
         if (amount > 1000000) amount = 1000000;
         remittanceAmountInput.value = amount;
 
