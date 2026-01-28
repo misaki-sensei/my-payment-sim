@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 設定
     const DAILY_CHARGE_LIMIT = 100000; 
-    const INITIAL_BALANCE = 0;        
+    const INITIAL_BALANCE = 0;         
 
     // 変数
     let balance = 0;
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let myCustomerId = localStorage.getItem('customerMockPayPayId');
     let autoTimer = null; 
 
-    // ★入力制限用：直前の有効な値を保存
+    // 入力制限用：直前の有効な値を保存
     let lastValidChargeInput = "";
 
     if (!myCustomerId) {
@@ -103,15 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) target.classList.remove('hidden');
     };
 
-    // ★重要：100万を超える入力を「打たせない」ロジック
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        
         if (val > 1000000) {
-            // 1,000,000を超えたら、前の値を復元して入力をなかったことにする
             chargeAmountInput.value = lastValidChargeInput;
         } else {
-            // 範囲内なら、現在の値を「有効な値」として保存
             lastValidChargeInput = chargeAmountInput.value;
         }
         updatePredictedBalance();
@@ -120,15 +116,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const updatePredictedBalance = () => {
         const val = parseInt(chargeAmountInput.value);
         const addAmount = isNaN(val) ? 0 : val;
-        predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
+        if (predictedBalanceEl) predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ ---
+    // --- QRカメラ (リセット処理追加箇所) ---
     const startQrReader = () => {
-        showSection(qrReaderSection);
+        // 【追加】再読み取り時に前回のデータを完全にリセット
         scannedData = null;
-        readAmountDisplay.classList.add('hidden');
-        confirmPayBtn.classList.add('hidden');
+        if (scannedAmountEl) scannedAmountEl.textContent = "¥ 0"; // 表示を0に
+        readAmountDisplay.classList.add('hidden'); // 金額エリアを隠す
+        confirmPayBtn.classList.add('hidden');    // 確定ボタンを隠す
+
+        showSection(qrReaderSection);
+        
         if(cameraStatus) {
             cameraStatus.textContent = '読み取り中...';
             cameraStatus.style.color = "";
@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
+                    // type: 'receive_money' のQRも処理できるように考慮（店舗用QRの構造に合わせる）
                     if (data.amount && data.shopId && data.transactionId) {
                         if(cameraStatus) {
                             cameraStatus.textContent = '✅ 読み取りました！';
@@ -230,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showSection(paymentCompletionSection);
 
             autoTimer = setTimeout(() => { 
-                startQrReader(); 
+                showSection(mainPaymentSection); // 支払い完了後はメインに戻るのが一般的
             }, AUTO_DELAY);
 
         } catch (e) {
@@ -273,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showQrReaderBtn.onclick = startQrReader;
     showChargeBtn.onclick = () => { 
         chargeAmountInput.value = ''; 
-        lastValidChargeInput = ''; // クリア
+        lastValidChargeInput = ''; 
         updatePredictedBalance(); 
         showSection(chargeSection); 
     };
@@ -302,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmChargeBtn.onclick = handleCharge;
     confirmPayBtn.onclick = handlePayment;
 
-    // ★修正箇所：oninput で制限関数を呼ぶ
     chargeAmountInput.oninput = handleChargeInput;
 
     if (window.database) {
