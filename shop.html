@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script type="text/javascript" src="qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
@@ -36,7 +35,7 @@
             <h2 class="section-title">支払い金額設定</h2>
             <div class="input-group">
                 <label for="paymentAmount">金額:</label>
-                <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" value="0">
+                <input type="number" id="paymentAmount" placeholder="支払い金額を入力" min="0" max="1000000" value="0">
             </div>
             <button id="generateQrBtn" class="primary-btn">
                 <span class="icon">🔗</span> QRコードを表示
@@ -77,7 +76,7 @@
             <h2 class="section-title">送金金額入力</h2>
             <p>送金先ID: <span id="targetUserIdDisplay" style="font-weight:bold;"></span></p>
             <div class="input-group">
-                <input type="number" id="remittanceAmountInput" placeholder="金額を入力">
+                <input type="number" id="remittanceAmountInput" max="1000000" placeholder="金額を入力">
             </div>
             <button id="confirmRemittanceBtn" class="primary-btn">送金実行</button>
             <button id="backToScanBtn" class="secondary-btn" style="margin-top:10px;">戻る</button>
