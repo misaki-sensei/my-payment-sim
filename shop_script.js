@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ★修正箇所：日時を秒まで含めたフル形式にする
+    // 修正：日時を秒まで含めたフル形式にする
     function saveAndRender(type, amount, userId) {
         const now = new Date();
         const timeStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHistoryItem(newTx);
     }
 
-    // ★修正箇所：日時を一番右に配置するレイアウト
+    // 修正：日時を一番右に配置するレイアウト
     function renderHistoryItem(t) {
         const li = document.createElement('li');
         li.style.padding = "12px"; 
@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
         showSection(paymentReceivedSection);
-        // 連続支払いのため2秒後に自動でQRへ戻る
         autoTimer = setTimeout(() => { startPayment(amount); }, AUTO_DELAY);
     }
 
@@ -170,7 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- イベントリスナー ---
     generateQrBtn.onclick = () => {
-        const amount = paymentAmountInput.value;
+        let amount = parseInt(paymentAmountInput.value);
+        // 上限1,000,000円の補正
+        if (amount > 1000000) amount = 1000000;
+        paymentAmountInput.value = amount;
+
         if (amount > 0) startPayment(amount);
         else alert("金額を入力してください");
     };
@@ -180,7 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     confirmRemittanceBtn.onclick = async () => {
-        const amount = parseInt(remittanceAmountInput.value);
+        let amount = parseInt(remittanceAmountInput.value);
+        // 上限1,000,000円の補正
+        if (amount > 1000000) amount = 1000000;
+        remittanceAmountInput.value = amount;
+
         if (!amount || amount <= 0) return alert("正しい金額を入力してください");
         
         try {
