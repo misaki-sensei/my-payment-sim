@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let myCustomerId = localStorage.getItem('customerMockPayPayId');
     let autoTimer = null; 
 
-    // 入力制限用：直前の有効な値を保存
     let lastValidChargeInput = "";
 
     if (!myCustomerId) {
@@ -119,13 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (predictedBalanceEl) predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ (リセット処理追加箇所) ---
+    // --- QRカメラ (リセット処理を強化) ---
     const startQrReader = () => {
-        // 【追加】再読み取り時に前回のデータを完全にリセット
-        scannedData = null;
-        if (scannedAmountEl) scannedAmountEl.textContent = "¥ 0"; // 表示を0に
-        readAmountDisplay.classList.add('hidden'); // 金額エリアを隠す
-        confirmPayBtn.classList.add('hidden');    // 確定ボタンを隠す
+        // ★修正：スキャン開始時に前回のデータを完全にクリアする
+        scannedData = null; 
+        if (scannedAmountEl) scannedAmountEl.textContent = "¥ 0";
+        if (readAmountDisplay) readAmountDisplay.classList.add('hidden');
+        if (confirmPayBtn) confirmPayBtn.classList.add('hidden');
 
         showSection(qrReaderSection);
         
@@ -134,9 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
             cameraStatus.style.color = "";
             cameraStatus.style.fontWeight = "";
         }
+        
+        // 既存のストリームがあれば停止
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
+
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
                 videoStream = stream;
@@ -161,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
-                    // type: 'receive_money' のQRも処理できるように考慮（店舗用QRの構造に合わせる）
+                    // 店舗側QRの形式を確認
                     if (data.amount && data.shopId && data.transactionId) {
                         if(cameraStatus) {
                             cameraStatus.textContent = '✅ 読み取りました！';
@@ -231,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showSection(paymentCompletionSection);
 
             autoTimer = setTimeout(() => { 
-                showSection(mainPaymentSection); // 支払い完了後はメインに戻るのが一般的
+                showSection(mainPaymentSection);
             }, AUTO_DELAY);
 
         } catch (e) {
@@ -299,7 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(mainPaymentSection);
     };
     backToMainFromChargeCompletionBtn.onclick = () => showSection(mainPaymentSection);
-    backToMainFromReceiveBtn.onclick = () => showSection(mainPaymentSection);
+    if (backToMainFromReceiveBtn) {
+        backToMainFromReceiveBtn.onclick = () => showSection(mainPaymentSection);
+    }
     confirmChargeBtn.onclick = handleCharge;
     confirmPayBtn.onclick = handlePayment;
 
