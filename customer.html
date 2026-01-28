@@ -96,17 +96,27 @@
                 <div class="completion-icon">✅</div>
                 <p class="completion-message">決済完了！</p>
                 <p class="completed-amount" id="completedAmount">¥ 0</p>
+                <p class="shop-id-display" id="completedShopId"></p>
             </div>
-            <button id="backToMainFromCompletionBtn" class="primary-btn">メイン画面に戻る</button>
+            <button id="backToMainFromCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
+        </div>
+
+        <div class="charge-completion-section hidden" id="chargeCompletionSection">
+            <div class="completion-card card">
+                <div class="completion-icon">➕</div>
+                <p class="completion-message">チャージ完了！</p>
+                <p class="completed-amount" id="chargedAmount">¥ 0</p>
+            </div>
+            <button id="backToMainFromChargeCompletionBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
         </div>
 
         <div class="receive-completion-section hidden" id="receiveCompletionSection">
             <div class="completion-card card">
                 <div class="completion-icon" style="background-color: #ff9800;">💰</div>
-                <p class="completion-message">入金完了！</p>
+                <p class="completion-message">お金を受け取りました！</p>
                 <p id="receivedAmountDisplay" class="completed-amount">¥ 0</p>
             </div>
-            <button id="backToMainFromReceiveBtn" class="primary-btn">メイン画面に戻る</button>
+            <button id="backToMainFromReceiveBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
         </div>
 
         <div class="history-section card">
