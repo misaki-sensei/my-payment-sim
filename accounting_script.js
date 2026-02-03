@@ -33,14 +33,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const receivedAmountDisplayEl = document.getElementById('receivedAmountDisplay');
     const backToMainFromReceiveBtn = document.getElementById('backToMainFromReceiveBtn');
 
-    // --- 定数 (★保存先を staff に変更) ---
+    // --- 定数 (★保存先をstaffに変更) ---
     const LOCAL_STORAGE_BALANCE_KEY = 'staffPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'staffPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'staffPayPayDailyCharges';
     const AUTO_DELAY = 2000; 
 
     // 設定
-    const DAILY_CHARGE_LIMIT = 100000; 
+    const DAILY_CHARGE_LIMIT = 10000; // ★1日の上限を10,000に変更
     const INITIAL_BALANCE = 0;          
 
     // 変数
@@ -50,13 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedData = null;
     let videoStream = null;
     let requestAnimFrameId = null; 
-    let myStaffId = localStorage.getItem('staffPayPayId'); // ★IDキーを変更
+    let myStaffId = localStorage.getItem('staffPayPayId'); // ★スタッフ用IDキー
     let autoTimer = null; 
 
     let lastValidChargeInput = "";
 
     if (!myStaffId) {
-        myStaffId = `STAFF-${Math.floor(Math.random() * 900000) + 100000}`; // ★プレフィックスを変更
+        myStaffId = `STAFF-${Math.floor(Math.random() * 900000) + 100000}`;
         localStorage.setItem('staffPayPayId', myStaffId);
     }
 
@@ -104,7 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        if (val > 1000000) {
+        // ★入力バリデーションの上限を10,000に変更
+        if (val > 10000) {
             chargeAmountInput.value = lastValidChargeInput;
         } else {
             lastValidChargeInput = chargeAmountInput.value;
@@ -128,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(qrReaderSection);
         
         if(cameraStatus) {
-            cameraStatus.textContent = '読み取り中...'; // ★文言を変更
+            cameraStatus.textContent = '読み取り中...'; // ★文言変更
             cameraStatus.style.color = "";
             cameraStatus.style.fontWeight = "";
         }
@@ -227,12 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
             completedShopIdEl.textContent = scannedData.shopId;
-            
-            // スキャナー停止
-            stopQrReader();
             showSection(paymentCompletionSection);
 
-            // ★ 会計完了後、2秒で自動的に「スキャナー」へ戻る（レジ連続使用のため）
+            // スタッフ用：完了後、自動でスキャナーに戻る
             autoTimer = setTimeout(() => { 
                 startQrReader();
             }, AUTO_DELAY);
