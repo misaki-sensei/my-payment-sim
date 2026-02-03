@@ -33,15 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const receivedAmountDisplayEl = document.getElementById('receivedAmountDisplay');
     const backToMainFromReceiveBtn = document.getElementById('backToMainFromReceiveBtn');
 
-    // --- 定数 ---
+    // --- 定数 (★保存先をお客様用に変更・スタッフ用と分離) ---
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
     const AUTO_DELAY = 2000; 
 
     // 設定
-    const DAILY_CHARGE_LIMIT = 100000; 
-    const INITIAL_BALANCE = 0;         
+    const DAILY_CHARGE_LIMIT = 100000; // お客様用：上限は100,000に戻しています
+    const INITIAL_BALANCE = 0;          
 
     // 変数
     let balance = 0;
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannedData = null;
     let videoStream = null;
     let requestAnimFrameId = null; 
-    let myCustomerId = localStorage.getItem('customerMockPayPayId');
+    let myCustomerId = localStorage.getItem('customerMockPayPayId'); // ★お客様用ID
     let autoTimer = null; 
 
     let lastValidChargeInput = "";
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        if (val > 1000000) {
+        if (val > 1000000) { // お客様用：入力上限は1,000,000
             chargeAmountInput.value = lastValidChargeInput;
         } else {
             lastValidChargeInput = chargeAmountInput.value;
@@ -118,9 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (predictedBalanceEl) predictedBalanceEl.textContent = (balance + addAmount).toLocaleString();
     };
 
-    // --- QRカメラ (リセット処理を強化) ---
+    // --- QRカメラ ---
     const startQrReader = () => {
-        // ★修正：スキャン開始時に前回のデータを完全にクリアする
         scannedData = null; 
         if (scannedAmountEl) scannedAmountEl.textContent = "¥ 0";
         if (readAmountDisplay) readAmountDisplay.classList.add('hidden');
@@ -134,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
             cameraStatus.style.fontWeight = "";
         }
         
-        // 既存のストリームがあれば停止
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
@@ -163,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
-                    // 店舗側QRの形式を確認
                     if (data.amount && data.shopId && data.transactionId) {
                         if(cameraStatus) {
                             cameraStatus.textContent = '✅ 読み取りました！';
@@ -232,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             completedShopIdEl.textContent = scannedData.shopId;
             showSection(paymentCompletionSection);
 
+            // ★お客様用：支払い完了後はホーム画面（mainPaymentSection）に戻る
             autoTimer = setTimeout(() => { 
                 showSection(mainPaymentSection);
             }, AUTO_DELAY);
