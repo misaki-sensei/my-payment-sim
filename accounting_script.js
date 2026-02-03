@@ -104,8 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        // ★入力バリデーションの上限を10,000に変更
-        if (val > 10000) {
+        // ★入力バリデーションの上限を100,000に変更
+        if (val > 100000) {
             chargeAmountInput.value = lastValidChargeInput;
         } else {
             lastValidChargeInput = chargeAmountInput.value;
@@ -327,3 +327,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
