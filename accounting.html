@@ -40,13 +40,13 @@
 
         <div class="main-payment-section" id="mainPaymentSection">
             <button id="showQrReaderBtn" class="action-btn primary-btn large-btn">
-                <span class="icon">📸</span> 支払い用QRを読み取る
+                <span class="icon">📸</span> 店舗QRコードを読み取る
             </button>
             <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
-                <span class="icon">➕</span> 資金をチャージする
+                <span class="icon">➕</span> チャージする
             </button>
             <button id="showReceiveBtn" class="action-btn toggle-btn large-btn" style="margin-top: 15px;">
-                <span class="icon">📥</span> 資金を受け取る
+                <span class="icon">📥</span> お金を受け取る
             </button>
         </div>
 
@@ -81,7 +81,7 @@
         </div>
 
         <div id="receiveQrSection" class="section hidden card">
-            <h2 class="section-title">資金受け取りQR</h2>
+            <h2 class="section-title">お金受け取りQR</h2>
             <div class="qr-display-container">
                 <div id="receiveQrCode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
                 <p class="instruction-text" style="white-space: nowrap; font-size: 0.9em; text-align: center; width: 100%; display: block;">
@@ -113,7 +113,7 @@
         <div class="receive-completion-section hidden" id="receiveCompletionSection">
             <div class="completion-card card">
                 <div class="completion-icon" style="background-color: #ff9800;">💰</div>
-                <p class="completion-message">資金を受け取りました！</p>
+                <p class="completion-message">お金を受け取りました！</p>
                 <p id="receivedAmountDisplay" class="completed-amount">¥ 0</p>
             </div>
             <button id="backToMainFromReceiveBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
@@ -127,3 +127,4 @@
     <script src="accounting_script.js"></script>
 </body>
 </html>
+
