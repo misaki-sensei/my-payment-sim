@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const AUTO_DELAY = 2000; 
 
     // 設定
-    const DAILY_CHARGE_LIMIT = 10000; // ★1日の上限を10,000に変更
+    const DAILY_CHARGE_LIMIT = 100000; // ★1日の上限を100,000に変更
     const INITIAL_BALANCE = 0;          
 
     // 変数
@@ -327,4 +327,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
