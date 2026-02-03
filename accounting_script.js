@@ -37,11 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
-    const AUTO_DELAY = 2000; // 2秒設定
+    const AUTO_DELAY = 2000; // 完了画面の表示時間（2秒）
 
     // 設定
-    const DAILY_CHARGE_LIMIT = 100000; // 10万円制限
-    const INITIAL_BALANCE = 0;
+    const DAILY_CHARGE_LIMIT = 100000; // 1日の上限を10万に設定
+    const INITIAL_BALANCE = 0;         
 
     // 変数
     let balance = 0;
@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- QRカメラ ---
     const startQrReader = () => {
+        // 以前のデータをリセット
         scannedData = null; 
         if (scannedAmountEl) scannedAmountEl.textContent = "¥ 0";
         if (readAmountDisplay) readAmountDisplay.classList.add('hidden');
@@ -129,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(qrReaderSection);
         
         if(cameraStatus) {
-            cameraStatus.textContent = 'スキャンしてください';
+            cameraStatus.textContent = '次のQRコードを待機中...';
             cameraStatus.style.color = "";
             cameraStatus.style.fontWeight = "";
         }
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 requestAnimFrameId = requestAnimationFrame(tick);
             })
             .catch(err => {
-                if(cameraStatus) cameraStatus.textContent = 'カメラ起動に失敗しました';
+                if(cameraStatus) cameraStatus.textContent = 'カメラエラー';
             });
     };
 
@@ -164,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = JSON.parse(code.data);
                     if (data.amount && data.shopId && data.transactionId) {
                         if(cameraStatus) {
-                            cameraStatus.textContent = '✅ QRコードを読み取りました';
+                            cameraStatus.textContent = '✅ 読み取りました';
                             cameraStatus.style.color = "#28a745";
                             cameraStatus.style.fontWeight = "bold";
                         }
@@ -194,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 支払い処理（完了2秒後にカメラを自動再開） ---
+    // --- 支払い処理（会計アプリ用：完了後自動でカメラ再起動） ---
     const handlePayment = async () => {
         if (!scannedData) return;
         const amount = parseInt(scannedData.amount);
@@ -229,11 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
             completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
             completedShopIdEl.textContent = scannedData.shopId;
             
-            // 重要なポイント: スキャナーを一旦止めてから完了画面へ
+            // スキャナーを一旦停止
             stopQrReader();
+
+            // 支払い完了画面を表示
             showSection(paymentCompletionSection);
 
-            // ★修正：2秒後にメインではなく、カメラ画面(startQrReader)へ戻る
+            // 【重要】2秒後に自動で「カメラ（スキャナー）」へ戻る
             autoTimer = setTimeout(() => { 
                 startQrReader();
             }, AUTO_DELAY);
@@ -298,14 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cancelChargeBtn.onclick = () => showSection(mainPaymentSection);
     closeReceiveBtn.onclick = () => showSection(mainPaymentSection);
-    
-    // 完了画面から手動で戻る場合もカメラを再開するかホームに戻るか選べますが、
-    // ここでは仕様通り一度ストップしてホームへ戻る設定にしています
     backToMainFromCompletionBtn.onclick = () => {
         stopQrReader();
         showSection(mainPaymentSection);
     };
-
     backToMainFromChargeCompletionBtn.onclick = () => showSection(mainPaymentSection);
     if (backToMainFromReceiveBtn) {
         backToMainFromReceiveBtn.onclick = () => showSection(mainPaymentSection);
@@ -315,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chargeAmountInput.oninput = handleChargeInput;
 
-    //Firebase Remittance Listener (変更なし)
+    // Firebase受信処理（子要素追加時）
     if (window.database) {
         window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
             const data = snapshot.val();
