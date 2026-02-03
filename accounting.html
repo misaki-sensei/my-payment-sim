@@ -34,19 +34,19 @@
         </div>
 
         <div class="balance-section card">
-            <p class="balance-label">現在の残高</p>
+            <p class="balance-label">運用可能残高</p>
             <p class="balance" id="currentBalance">¥ 0</p>
         </div>
 
         <div class="main-payment-section" id="mainPaymentSection">
             <button id="showQrReaderBtn" class="action-btn primary-btn large-btn">
-                <span class="icon">📸</span> 店舗QRコードを読み取る
+                <span class="icon">📸</span> 支払い用QRを読み取る
             </button>
             <button id="showChargeBtn" class="action-btn charge-toggle-btn large-btn">
-                <span class="icon">➕</span> チャージする
+                <span class="icon">➕</span> 資金をチャージする
             </button>
             <button id="showReceiveBtn" class="action-btn toggle-btn large-btn" style="margin-top: 15px;">
-                <span class="icon">📥</span> お金を受け取る
+                <span class="icon">📥</span> 資金を受け取る
             </button>
         </div>
 
@@ -56,23 +56,17 @@
                 <video id="qrCameraVideo" autoplay playsinline muted style="width: 100%; border-radius: 8px;"></video>
                 <canvas id="qrCanvas" style="display:none;"></canvas>
                 <div id="cameraStatus" style="text-align:center; margin-top:10px; color:#666;">カメラ起動中...</div>
-                
                 <div id="readAmountDisplay" class="read-amount-display hidden">
-                    <p>支払金額</p>
+                    <p>決済金額</p>
                     <p id="scannedAmount" class="completed-amount">¥ 0</p>
                 </div>
-
-                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 10px 0; font-size: 14px; font-weight: bold;">
-                    お店の支払い用QRを映してください
-                </p>
-
-                <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">💸 支払いを確定</button>
+                <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">💸 決済を確定</button>
                 <button id="cancelQrReadBtn" class="secondary-btn" style="margin-top: 15px;">キャンセル</button>
             </div>
         </div>
 
         <div class="charge-section hidden" id="chargeSection">
-            <h2 class="section-title">残高チャージ</h2>
+            <h2 class="section-title">資金チャージ</h2>
             <div class="card">
                 <div class="input-group">
                     <label>チャージ金額 (最大 ¥1,000,000)</label>
@@ -87,11 +81,11 @@
         </div>
 
         <div id="receiveQrSection" class="section hidden card">
-            <h2 class="section-title">お金を受け取る</h2>
+            <h2 class="section-title">資金受け取りQR</h2>
             <div class="qr-display-container">
                 <div id="receiveQrCode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; font-size: 0.9em; width: 100%; display: block;">
-                    お店の人に読み取ってもらってください
+                <p class="instruction-text" style="white-space: nowrap; font-size: 0.9em; text-align: center; width: 100%; display: block;">
+                    店舗側に読み取ってもらってください
                 </p>
             </div>
             <button id="closeReceiveBtn" class="secondary-btn large-btn">戻る</button>
@@ -119,18 +113,17 @@
         <div class="receive-completion-section hidden" id="receiveCompletionSection">
             <div class="completion-card card">
                 <div class="completion-icon" style="background-color: #ff9800;">💰</div>
-                <p class="completion-message">お金を受け取りました！</p>
+                <p class="completion-message">資金を受け取りました！</p>
                 <p id="receivedAmountDisplay" class="completed-amount">¥ 0</p>
             </div>
             <button id="backToMainFromReceiveBtn" class="primary-btn toggle-btn">メイン画面に戻る</button>
         </div>
 
         <div class="history-section card">
-            <h2 class="section-title">履歴</h2>
+            <h2 class="section-title">会計履歴</h2>
             <ul id="transactionHistory"></ul>
         </div>
     </div>
-
     <script src="accounting_script.js"></script>
 </body>
 </html>
