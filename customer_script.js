@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        if (val > 1000000) { // お客様用：入力上限は1,000,000
+        if (val > 100000) { // お客様用：入力上限は100,000
             chargeAmountInput.value = lastValidChargeInput;
         } else {
             lastValidChargeInput = chargeAmountInput.value;
@@ -326,3 +326,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
