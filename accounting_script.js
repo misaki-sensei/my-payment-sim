@@ -37,11 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const LOCAL_STORAGE_BALANCE_KEY = 'customerMockPayPayBalance';
     const LOCAL_STORAGE_TRANSACTIONS_KEY = 'customerMockPayPayTransactions';
     const LOCAL_STORAGE_DAILY_CHARGE_KEY = 'customerMockPayPayDailyCharges';
-    const AUTO_DELAY = 2000; 
+    const AUTO_DELAY = 2000; // 2秒設定
 
     // 設定
-    const DAILY_CHARGE_LIMIT = 100000; 
-    const INITIAL_BALANCE = 0;         
+    const DAILY_CHARGE_LIMIT = 100000; // 10万円制限
+    const INITIAL_BALANCE = 0;
 
     // 変数
     let balance = 0;
@@ -102,10 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) target.classList.remove('hidden');
     };
 
-    // --- 【修正】チャージ入力制限（10万円） ---
+    // --- チャージ入力制限（10万円） ---
     const handleChargeInput = () => {
         const val = parseInt(chargeAmountInput.value);
-        if (val > 100000) { // 上限を10万に修正
+        if (val > 100000) { 
             chargeAmountInput.value = lastValidChargeInput;
         } else {
             lastValidChargeInput = chargeAmountInput.value;
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(qrReaderSection);
         
         if(cameraStatus) {
-            cameraStatus.textContent = '読み取り中...';
+            cameraStatus.textContent = 'スキャンしてください';
             cameraStatus.style.color = "";
             cameraStatus.style.fontWeight = "";
         }
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 requestAnimFrameId = requestAnimationFrame(tick);
             })
             .catch(err => {
-                if(cameraStatus) cameraStatus.textContent = 'カメラエラー';
+                if(cameraStatus) cameraStatus.textContent = 'カメラ起動に失敗しました';
             });
     };
 
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = JSON.parse(code.data);
                     if (data.amount && data.shopId && data.transactionId) {
                         if(cameraStatus) {
-                            cameraStatus.textContent = '✅ 読み取りました！';
+                            cameraStatus.textContent = '✅ QRコードを読み取りました';
                             cameraStatus.style.color = "#28a745";
                             cameraStatus.style.fontWeight = "bold";
                         }
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 【修正】支払い処理（完了後にスキャナーを再開） ---
+    // --- 支払い処理（完了2秒後にカメラを自動再開） ---
     const handlePayment = async () => {
         if (!scannedData) return;
         const amount = parseInt(scannedData.amount);
@@ -229,13 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
             completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
             completedShopIdEl.textContent = scannedData.shopId;
             
-            // スキャナーを一旦確実に止める（二重起動防止）
+            // 重要なポイント: スキャナーを一旦止めてから完了画面へ
             stopQrReader();
-
-            // 完了画面を表示
             showSection(paymentCompletionSection);
 
-            // 【修正】2秒後に再びカメラ（スキャナー）を自動起動
+            // ★修正：2秒後にメインではなく、カメラ画面(startQrReader)へ戻る
             autoTimer = setTimeout(() => { 
                 startQrReader();
             }, AUTO_DELAY);
@@ -300,10 +298,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cancelChargeBtn.onclick = () => showSection(mainPaymentSection);
     closeReceiveBtn.onclick = () => showSection(mainPaymentSection);
+    
+    // 完了画面から手動で戻る場合もカメラを再開するかホームに戻るか選べますが、
+    // ここでは仕様通り一度ストップしてホームへ戻る設定にしています
     backToMainFromCompletionBtn.onclick = () => {
         stopQrReader();
         showSection(mainPaymentSection);
     };
+
     backToMainFromChargeCompletionBtn.onclick = () => showSection(mainPaymentSection);
     if (backToMainFromReceiveBtn) {
         backToMainFromReceiveBtn.onclick = () => showSection(mainPaymentSection);
@@ -313,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chargeAmountInput.oninput = handleChargeInput;
 
+    //Firebase Remittance Listener (変更なし)
     if (window.database) {
         window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
             const data = snapshot.val();
