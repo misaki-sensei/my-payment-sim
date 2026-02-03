@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
+        // Firebase設定は共通で使用
         const firebaseConfig = {
             apiKey: "AIzaSyC8WKf1uoTOn8-HGPwu_GHJ_2MZpmaco10",
             authDomain: "my-paypay-sim-45735.firebaseapp.com",
@@ -56,10 +57,16 @@
                 <video id="qrCameraVideo" autoplay playsinline muted style="width: 100%; border-radius: 8px;"></video>
                 <canvas id="qrCanvas" style="display:none;"></canvas>
                 <div id="cameraStatus" style="text-align:center; margin-top:10px; color:#666;">カメラ起動中...</div>
+                
                 <div id="readAmountDisplay" class="read-amount-display hidden">
                     <p>支払金額</p>
                     <p id="scannedAmount" class="completed-amount">¥ 0</p>
                 </div>
+
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 10px 0; font-size: 14px; font-weight: bold;">
+                    お店の支払い用QRを映してください
+                </p>
+
                 <button id="confirmPayBtn" class="action-btn pay-btn hidden" style="margin-top: 15px;">💸 支払いを確定</button>
                 <button id="cancelQrReadBtn" class="secondary-btn" style="margin-top: 15px;">キャンセル</button>
             </div>
@@ -84,7 +91,7 @@
             <h2 class="section-title">お金を受け取る</h2>
             <div class="qr-display-container">
                 <div id="receiveQrCode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-                <p class="instruction-text" style="white-space: nowrap; font-size: 0.9em; text-align: center; width: 100%; display: block;">
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; font-size: 0.9em; width: 100%; display: block;">
                     お店の人に読み取ってもらってください
                 </p>
             </div>
@@ -124,7 +131,7 @@
             <ul id="transactionHistory"></ul>
         </div>
     </div>
-    <script src="customer_script.js"></script>
+
+    <script src="accounting_script.js"></script>
 </body>
 </html>
-
