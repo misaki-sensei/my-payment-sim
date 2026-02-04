@@ -85,7 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.className = t.type;
             const dateStr = new Date(t.timestamp).toLocaleString('ja-JP');
-            const label = t.type === 'payment' ? '支払い' : 'チャージ';
+            
+            // ★履歴ラベルの判定を修正
+            let label = 'チャージ';
+            if (t.type === 'payment') label = '支払い';
+            if (t.type === 'receive') label = '受け取り'; // お店からの送金用
+            
             li.innerHTML = `<span>${label}</span><span>¥ ${t.amount.toLocaleString()}</span><span class="history-date">${dateStr}</span>`;
             transactionHistoryEl.appendChild(li);
         });
@@ -132,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cameraStatus.style.fontWeight = "";
         }
         
-        stopQrReader(); // 既存のカメラを一度確実に止める
+        stopQrReader();
 
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
@@ -158,10 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code) {
                 try {
                     const data = JSON.parse(code.data);
-                    // 以前と同じtransactionIdなら無視（連続支払い時の重複防止）
                     if (data.amount && data.shopId && data.transactionId) {
                         if (scannedData && scannedData.transactionId === data.transactionId) {
-                            // 同じQRを読み続けている場合はスルー
                         } else {
                             if(cameraStatus) {
                                 cameraStatus.textContent = '✅ 読み取りました！';
@@ -172,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             scannedAmountEl.textContent = `¥ ${parseInt(data.amount).toLocaleString()}`;
                             readAmountDisplay.classList.remove('hidden');
                             confirmPayBtn.classList.remove('hidden');
-                            // 見やすさのため少し動画を止める
                             qrCameraVideo.pause();
                             cancelAnimationFrame(requestAnimFrameId);
                             return;
@@ -194,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 支払い処理 (★ここを連続スキャン用に修正) ---
+    // --- 支払い処理 ---
     const handlePayment = async () => {
         if (!scannedData) return;
         const amount = parseInt(scannedData.amount);
@@ -203,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const nowIso = new Date().toISOString();
             if (window.database) {
-                // 店舗側への通知用
                 await window.database.ref('paymentStatuses').push({
                     amount: amount, 
                     shopId: scannedData.shopId,
@@ -212,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     transactionId: scannedData.transactionId 
                 });
 
-                // 個別ステータス用
                 await window.database.ref('payment_status/' + scannedData.transactionId).set({
                     status: 'completed', 
                     userId: myCustomerId, 
@@ -230,13 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             completedAmountEl.textContent = `¥ ${amount.toLocaleString()}`;
             completedShopIdEl.textContent = scannedData.shopId;
-            
-            // 完了画面を表示
             showSection(paymentCompletionSection);
 
-            // ★【追加】2秒後に自動的にカメラ画面（スキャン）に戻る
             autoTimer = setTimeout(() => { 
-                startQrReader(); // 再度カメラを起動して次のQRを待機
+                startQrReader(); 
             }, AUTO_DELAY);
 
         } catch (e) {
@@ -299,24 +296,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cancelChargeBtn.onclick = () => showSection(mainPaymentSection);
     closeReceiveBtn.onclick = () => showSection(mainPaymentSection);
-    
     backToMainFromCompletionBtn.onclick = () => {
         stopQrReader();
         showSection(mainPaymentSection);
     };
-
     backToMainFromChargeCompletionBtn.onclick = () => showSection(mainPaymentSection);
-    
     if (backToMainFromReceiveBtn) {
         backToMainFromReceiveBtn.onclick = () => showSection(mainPaymentSection);
     }
-    
     confirmChargeBtn.onclick = handleCharge;
     confirmPayBtn.onclick = handlePayment;
-
     chargeAmountInput.oninput = handleChargeInput;
 
-    // お金を受け取るリアルタイム監視
+    // ★お店からの送金（受け取り）のリアルタイム監視を修正
     if (window.database) {
         window.database.ref('remittances/' + myCustomerId).on('child_added', (snapshot) => {
             const data = snapshot.val();
@@ -324,13 +316,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (amount > 0) {
                 balance += amount;
                 localStorage.setItem(LOCAL_STORAGE_BALANCE_KEY, balance);
-                transactions.push({ type: 'charge', amount, timestamp: new Date().toISOString() });
+                
+                // ★typeを 'receive' にして履歴に追加
+                transactions.push({ 
+                    type: 'receive', 
+                    amount: amount, 
+                    timestamp: new Date().toISOString() 
+                });
+                
                 localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
                 updateBalanceDisplay();
                 updateHistoryDisplay();
+                
                 receivedAmountDisplayEl.textContent = `¥ ${amount.toLocaleString()}`;
                 showSection(receiveCompletionSection);
-                autoTimer = setTimeout(() => { showSection(mainPaymentSection); }, AUTO_DELAY);
+                
+                autoTimer = setTimeout(() => { 
+                    showSection(mainPaymentSection); 
+                }, AUTO_DELAY);
+                
                 snapshot.ref.remove();
             }
         });
