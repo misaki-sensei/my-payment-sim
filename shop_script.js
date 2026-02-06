@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM要素 ---
+    // --- DOM要素 --- (既存のまま)
     const mainShopSection = document.getElementById('mainShopSection');
     const paymentAmountInput = document.getElementById('paymentAmount');
     const generateQrBtn = document.getElementById('generateQrBtn');
@@ -28,15 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 定数・変数 ---
     const SHOP_ID = 'YanaharaSHOP001';
-    const AUTO_DELAY = 2000; // 完了表示の時間
+    const AUTO_DELAY = 2000; 
     const STORAGE_KEY = 'shop_history_data';
     let currentExpectedTransactionId = null;
     let shopVideoObj = null;
     let targetUserId = null;
     let autoTimer = null;
     let transactions = [];
-    
-    // 【重要】直前の決済金額を保持
     let lastGeneratedAmount = 0;
 
     // --- リセット関数 ---
@@ -45,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (remittanceAmountInput) remittanceAmountInput.value = "";
     };
 
-    // --- 入力値のブロック制限 (100万上限) ---
+    // --- 入力値のブロック制限 ---
     const blockOverMillion = (inputEl) => {
         if (!inputEl) return;
         let lastValidValue = inputEl.value;
@@ -104,9 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (section) section.classList.remove('hidden');
     }
 
-    // --- 支払い受付処理 (★金額を保持するように修正) ---
+    // --- 支払い受付処理 ---
     function startPayment(amount) {
-        lastGeneratedAmount = amount; // 金額を保持
+        lastGeneratedAmount = amount; 
         currentExpectedTransactionId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const qrData = JSON.stringify({ shopId: SHOP_ID, amount: amount, transactionId: currentExpectedTransactionId });
         
@@ -114,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCodeCanvas.innerHTML = '';
         new QRCode(qrCodeCanvas, { text: qrData, width: 200, height: 200 });
 
-        // Firebase監視
         database.ref('paymentStatuses').off();
         database.ref('paymentStatuses').on('child_added', (snapshot) => {
             const data = snapshot.val();
@@ -125,15 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 支払い完了処理 (★2秒後に自動でQR再表示) ---
+    // --- 支払い完了処理 ---
     function handlePaymentCompleted(userId, amount) {
         saveAndRender('income', amount, userId);
         receivedAmountEl.textContent = `¥ ${parseInt(amount).toLocaleString()}`;
         receivedCustomerInfoEl.textContent = `User: ${userId}`;
-        
         showSection(paymentReceivedSection);
-
-        // 2秒後に「同じ金額」でstartPaymentを自動実行
         autoTimer = setTimeout(() => { 
             startPayment(lastGeneratedAmount);
         }, AUTO_DELAY);
@@ -185,28 +179,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- イベントリスナー ---
-    generateQrBtn.onclick = () => {
-        const amount = parseInt(paymentAmountInput.value);
-        if (amount > 0) {
-            startPayment(amount);
-            paymentAmountInput.value = ""; // 入力欄をクリア
-        } else {
-            alert("金額を入力してください");
-        }
-    };
-
-    if (startRemittanceBtn) startRemittanceBtn.onclick = () => startShopQrReader();
-
+    // --- イベントリスナー (★送金ログの追加) ---
     confirmRemittanceBtn.onclick = async () => {
         const amount = parseInt(remittanceAmountInput.value);
         if (!amount || amount <= 0) return alert("正しい金額を入力してください");
         try {
             const now = new Date().toISOString();
+            const nowTs = Date.now(); // GAS用のタイムスタンプ
+
+            // 1. お客さんの受取データ (既存)
             await database.ref('paymentStatuses').push({
                 amount: -amount, shopId: SHOP_ID, customerId: targetUserId, timestamp: now, transactionId: 'remit_' + Date.now()
             });
             await database.ref('remittances/' + targetUserId).push({ amount: amount, shopId: SHOP_ID, timestamp: now });
+
+            // 2. ★スプレッドシート（GAS）が読み取るための専用ログを追加
+            await database.ref('remittanceLogs').push({
+                amount: amount,
+                shopId: SHOP_ID,
+                customerId: targetUserId,
+                timestamp: nowTs
+            });
+
             saveAndRender('outgo', amount, targetUserId);
             sentAmountDisplay.textContent = `¥ ${amount.toLocaleString()}`;
             sentToUserDisplay.textContent = `宛先: ${targetUserId}`;
@@ -215,6 +209,19 @@ document.addEventListener('DOMContentLoaded', () => {
             autoTimer = setTimeout(() => { showSection(mainShopSection); }, 3000);
         } catch (e) { alert("エラーが発生しました"); }
     };
+
+    // --- 各種ボタン (既存のまま) ---
+    generateQrBtn.onclick = () => {
+        const amount = parseInt(paymentAmountInput.value);
+        if (amount > 0) {
+            startPayment(amount);
+            paymentAmountInput.value = ""; 
+        } else {
+            alert("金額を入力してください");
+        }
+    };
+
+    if (startRemittanceBtn) startRemittanceBtn.onclick = () => startShopQrReader();
 
     backToScanBtn.onclick = () => {
         resetAllInputs(); 
