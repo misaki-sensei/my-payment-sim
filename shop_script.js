@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM要素 --- (既存のまま)
+    // --- DOM要素 ---
     const mainShopSection = document.getElementById('mainShopSection');
     const paymentAmountInput = document.getElementById('paymentAmount');
     const generateQrBtn = document.getElementById('generateQrBtn');
@@ -179,21 +179,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- イベントリスナー (★送金ログの追加) ---
+    // --- イベントリスナー (修正：送金時は送金ログのみを作成) ---
     confirmRemittanceBtn.onclick = async () => {
         const amount = parseInt(remittanceAmountInput.value);
         if (!amount || amount <= 0) return alert("正しい金額を入力してください");
         try {
             const now = new Date().toISOString();
-            const nowTs = Date.now(); // GAS用のタイムスタンプ
+            const nowTs = Date.now(); 
 
-            // 1. お客さんの受取データ (既存)
-            await database.ref('paymentStatuses').push({
-                amount: -amount, shopId: SHOP_ID, customerId: targetUserId, timestamp: now, transactionId: 'remit_' + Date.now()
+            // 1. お客さんの受取データ (残高加算通知用)
+            await database.ref('remittances/' + targetUserId).push({ 
+                amount: amount, 
+                shopId: SHOP_ID, 
+                timestamp: now 
             });
-            await database.ref('remittances/' + targetUserId).push({ amount: amount, shopId: SHOP_ID, timestamp: now });
 
-            // 2. ★スプレッドシート（GAS）が読み取るための専用ログを追加
+            // 2. ★スプレッドシート（GAS）専用ログを追加
+            // paymentStatusesへの書き込みを削除したことで、スプシには「送金」のみが記録されます
             await database.ref('remittanceLogs').push({
                 amount: amount,
                 shopId: SHOP_ID,
