@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- イベントリスナー (修正：送金時は送金ログのみを作成) ---
+    // --- イベントリスナー (送金ログの追加・マイナス表記修正) ---
     confirmRemittanceBtn.onclick = async () => {
         const amount = parseInt(remittanceAmountInput.value);
         if (!amount || amount <= 0) return alert("正しい金額を入力してください");
@@ -187,17 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const now = new Date().toISOString();
             const nowTs = Date.now(); 
 
-            // 1. お客さんの受取データ (残高加算通知用)
+            // 1. お客さんの受取データ (Firebase残高用)
+            // お客さんの履歴にはプラスとして送る
             await database.ref('remittances/' + targetUserId).push({ 
                 amount: amount, 
                 shopId: SHOP_ID, 
                 timestamp: now 
             });
 
-            // 2. ★スプレッドシート（GAS）専用ログを追加
-            // paymentStatusesへの書き込みを削除したことで、スプシには「送金」のみが記録されます
+            // 2. スプレッドシート（GAS）読み取り用ログ
+            // スプシ側で「送金＝出金」として扱うため金額をマイナスにする
+            // また、paymentStatuses への push を行わないことで二重表示を防ぐ
             await database.ref('remittanceLogs').push({
-                amount: amount,
+                amount: -amount,
                 shopId: SHOP_ID,
                 customerId: targetUserId,
                 timestamp: nowTs
@@ -212,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { alert("エラーが発生しました"); }
     };
 
-    // --- 各種ボタン (既存のまま) ---
+    // --- 各種ボタン ---
     generateQrBtn.onclick = () => {
         const amount = parseInt(paymentAmountInput.value);
         if (amount > 0) {
